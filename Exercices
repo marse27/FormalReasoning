@@ -183,7 +183,7 @@
   Qed.
 
 
-    (*---------------------------- Exercice 4.2 ----------------------------*)
+  (*---------------------------- Exercice 4.2 ----------------------------*)
 
   Lemma insertion_sort_sorted :
     forall (l : list nat),
@@ -201,6 +201,29 @@
       apply insert_sorted. exact IH.
   Qed.
 
-
-
   End Exercice4.
+
+
+  (*---------------------------- Exercice 5 ----------------------------*)
+
+  Module Exercice5.
+  Import Exercice1.
+  Import Exercice2.
+  Import Exercice3.
+  Import Exercice4.
+
+  Definition is_a_sorting_algorithm (f: list nat -> list nat): Prop :=
+    forall (l: list nat),
+      Permutation l (f l) /\ Sorted (f l).
+
+  Lemma insertion_sort_is_a_sorting_algorithm :
+    is_a_sorting_algorithm insertion_sort.
+  Proof.
+    unfold is_a_sorting_algorithm.
+    intro l.
+    split.
+    - apply insertion_sort_perm.
+    - apply insertion_sort_sorted.
+  Qed.
+
+  End Exercice5.
