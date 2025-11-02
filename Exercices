@@ -116,6 +116,74 @@
 
   (*---------------------------- Exercice 4.1 ----------------------------*)
 
+
+Lemma Forall_le_trans :
+  forall (l : list nat) (a x : nat),
+    a <= x ->
+    Forall (fun y => x <= y) l ->
+    Forall (fun y => a <= y) l.
+Proof.
+  intros l a x Hax Hl.
+  eapply Forall_impl; [|exact Hl].
+  intros y Hy. eapply Nat.le_trans; [exact Hax| exact Hy].
+Qed.
+
+Lemma Forall_le_insert :
+  forall x a l,
+    Forall (fun z => x <= z) l ->
+    x <= a ->
+    Forall (fun z => x <= z) (insert a l).
+Proof.
+  intros x a l Hl Hxa; revert a Hxa.
+  induction Hl as [|y ys Hy Hys IH]; intros a Hxa; simpl.
+  - constructor; [assumption|constructor].
+  - destruct (a <=? y) eqn:Hay.
+    + constructor; [assumption|constructor; [exact Hy|exact Hys]].
+    + constructor; [exact Hy|apply IH; exact Hxa].
+Qed.
+
+Lemma insert_sorted :
+  forall (a : nat) (l : list nat),
+    Sorted l ->
+    Sorted (insert a l).
+Proof.
+  intros a l Hs; revert a.
+  induction l as [|x xs IH]; intros a; simpl.
+  - (* l = [] *)
+    apply (proj1 (Sorted_cons_iff a [])).
+    split; [exact Hs | constructor].
+  - (* l = x :: xs *)
+    destruct (a <=? x) eqn:Hab.
+    + (* case: a <= x *)
+      apply (proj1 (Sorted_cons_iff a (x :: xs))).
+      split.
+      -- exact Hs.
+      -- constructor.
+  ++ apply Nat.leb_le in Hab.  (* turns Hab into: Hab : a <= x *)
+exact Hab.
+  (* a <= x *)
+  ++ (* need Forall (le a) xs *)
+    destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs Hforx].
+    (* Hforx : Forall (le x) xs *)
+    eapply Forall_le_trans. apply Nat.leb_le in Hab. exact Hab. exact Hforx.
+
+    + (* a goes into the tail *)
+      apply Nat.leb_gt in Hab.  (* so x < a ⇒ x <= a *)
+      apply (proj1 (Sorted_cons_iff x (insert a xs))).
+      split.
+      * (* tail is sorted by IH *)
+        destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs _].
+        apply IH, Hxs.
+      * (* preserve head ≤ _ after insertion *)
+        destruct (proj2 (Sorted_cons_iff x xs) Hs) as [_ Hforx].
+        apply Forall_le_insert; [exact Hforx| lia ].
+Qed.
+
+
+
+
+  (*---------------------------- Exercice 4.1 - v2 -----------------------*)
+
   Lemma Forall_le_lift :
   forall a b l, a <= b -> Forall (le b) l -> Forall (le a) l.
   Proof.
@@ -554,6 +622,8 @@ Qed.
         * exact Hall.
         * constructor; [exact Hat | constructor].
   Qed.
+
+  (*---------------------------- Exercice 6.2 - Very Hard ----------------------------*)
 
   End Exercice6VeryHard
 
