@@ -1,0 +1,105 @@
+  From Coq Require Import Arith.PeanoNat. (* Required for nat *)
+  From Coq Require Import Lists.List. (* Required for list *)
+  From Coq Require Import micromega.Lia. (* Required for the 'lia' tactic *)
+  From Coq Require Import funind.Recdef. (* Required for the 'function' definition *)
+  From Coq Require Import Sorting.Permutation. (* Required for Permutation *)
+  From Coq Require Import Sorting.Sorted. (* Required for StronglySorted *)
+  Import ListNotations. (* Required for list notations *)
+
+  (*---------------------------- Exercice 1 ----------------------------*)
+
+  Module Exercice1.
+
+  Fixpoint insert (n : nat) (l : list nat) : list nat :=
+    match l with
+    | [] => [n]
+    | h :: t =>
+        if Nat.leb n h
+        then n :: l
+        else h :: insert n t
+    end.
+
+  Fixpoint insertion_sort (l : list nat) : list nat :=
+    match l with
+    | [] => []
+    | h :: t => insert h (insertion_sort t)
+    end.
+
+  Example sort_pi :
+    insertion_sort [3; 1; 4; 1; 5; 9; 2; 6; 5; 3; 5]
+    = [1; 1; 2; 3; 3; 4; 5; 5; 5; 6; 9].
+  Proof. reflexivity. Qed.
+
+  End Exercice1.
+
+  (*---------------------------- Exercice 2 ----------------------------*)
+
+  Module Exercice2.
+  Import Exercice1.
+
+  Lemma insert_perm :
+    forall (a : nat) (l : list nat),
+      Permutation (a :: l) (insert a l).
+  Proof.
+    induction l as [| h t IH]; simpl.
+    - apply Permutation_refl.
+    - destruct (Nat.leb a h) eqn:EH.
+      + apply Permutation_refl.
+      + eapply perm_trans.
+        * apply perm_swap.
+        * apply perm_skip. exact IH.
+  Qed.
+
+  Lemma insertion_sort_perm :
+    forall (l : list nat),
+      Permutation l (insertion_sort l).
+  Proof.
+    induction l as [| h t IH]; simpl.
+    - apply Permutation_refl.
+    - eapply perm_trans.
+      + apply perm_skip. exact IH.
+      + apply insert_perm.
+  Qed.
+
+  End Exercice2.
+
+  (*---------------------------- Exercice 3 ----------------------------*)
+
+  Module Exercice3.
+  Import Exercice1.
+
+  Definition Sorted (l: list nat): Prop :=
+  forall (i j iv jv: nat),
+    i < j ->
+      nth_error l i = Some iv ->
+        nth_error l j = Some jv ->
+          iv <= jv.
+
+Lemma Sorted_cons_iff :
+  forall (a : nat) (l : list nat),
+    Sorted l /\ Forall (le a) l <-> Sorted (a :: l).
+Proof.
+  split.
+  - intros [Hs Hl]. unfold Sorted in *.
+    intros i j iv jv Hij Hi Hj. simpl in Hi, Hj.
+    destruct j as [| j']; [inversion Hij|].
+    destruct i as [| i'].
+    + inversion Hi; subst iv. simpl in Hj.
+      eapply Forall_forall in Hl; [exact Hl|now apply nth_error_In in Hj].
+    + assert (i' < j') by lia. eapply Hs; eauto.
+  - intros H. split.
+    + (* Sorted l *)
+      unfold Sorted in *. intros i j iv jv Hij Hi Hj.
+      assert (S i < S j) by lia.
+      specialize (H (S i) (S j) iv jv H0).
+      simpl in H. rewrite Hi in H; rewrite Hj in H.
+      (* H now needs two trivial equalities *)
+      apply H; reflexivity; reflexivity.
+    + (* Forall (le a) l *)
+      apply Forall_forall. intros x HIn.
+      apply In_nth_error in HIn as [j' Hj'].
+      unfold Sorted in H.
+      specialize (H 0 (S j') a x ltac:(lia)).
+      simpl in H. rewrite Hj' in H. apply H. reflexivity. reflexivity.
+Qed.
+  End Exercice3.
