@@ -285,7 +285,16 @@
       + apply bubble_pass_perm.
   Qed.
 
+  (*---------------------------- Exercice 6.3 ----------------------------*)
 
+  Lemma bubble_sort_perm :
+    forall (l : list nat),
+      Permutation l (bubble_sort l).
+  Proof.
+    intros l.
+    unfold bubble_sort.
+    apply bubble_pass_perm_iter.
+  Qed.
 
   End Exercice6.
 
