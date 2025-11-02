@@ -75,31 +75,114 @@
         nth_error l j = Some jv ->
           iv <= jv.
 
-Lemma Sorted_cons_iff :
-  forall (a : nat) (l : list nat),
-    Sorted l /\ Forall (le a) l <-> Sorted (a :: l).
-Proof.
-  split.
-  - intros [Hs Hl]. unfold Sorted in *.
-    intros i j iv jv Hij Hi Hj. simpl in Hi, Hj.
-    destruct j as [| j']; [inversion Hij|].
-    destruct i as [| i'].
-    + inversion Hi; subst iv. simpl in Hj.
-      eapply Forall_forall in Hl; [exact Hl|now apply nth_error_In in Hj].
-    + assert (i' < j') by lia. eapply Hs; eauto.
-  - intros H. split.
-    + (* Sorted l *)
-      unfold Sorted in *. intros i j iv jv Hij Hi Hj.
-      assert (S i < S j) by lia.
-      specialize (H (S i) (S j) iv jv H0).
-      simpl in H. rewrite Hi in H; rewrite Hj in H.
-      (* H now needs two trivial equalities *)
-      apply H; reflexivity; reflexivity.
-    + (* Forall (le a) l *)
-      apply Forall_forall. intros x HIn.
-      apply In_nth_error in HIn as [j' Hj'].
-      unfold Sorted in H.
-      specialize (H 0 (S j') a x ltac:(lia)).
-      simpl in H. rewrite Hj' in H. apply H. reflexivity. reflexivity.
-Qed.
+  Lemma Sorted_cons_iff :
+    forall (a : nat) (l : list nat),
+      Sorted l /\ Forall (le a) l <-> Sorted (a :: l).
+  Proof.
+    split.
+    - intros [Hs Hl]. unfold Sorted in *.
+      intros i j iv jv Hij Hi Hj. simpl in Hi, Hj.
+      destruct j as [| j']; [inversion Hij|].
+      destruct i as [| i'].
+      + inversion Hi; subst iv. simpl in Hj.
+        eapply Forall_forall in Hl; [exact Hl|now apply nth_error_In in Hj].
+      + assert (i' < j') by lia. eapply Hs; eauto.
+    - intros H. split.
+      + (* Sorted l *)
+        unfold Sorted in *. intros i j iv jv Hij Hi Hj.
+        assert (S i < S j) by lia.
+        specialize (H (S i) (S j) iv jv H0).
+        simpl in H. rewrite Hi in H; rewrite Hj in H.
+        (* H now needs two trivial equalities *)
+        apply H.
+          * reflexivity.
+          * reflexivity.
+      + (* Forall (le a) l *)
+        apply Forall_forall. intros x HIn.
+        apply In_nth_error in HIn as [j' Hj'].
+        unfold Sorted in H.
+        specialize (H 0 (S j') a x ltac:(lia)).
+        simpl in H. rewrite Hj' in H. apply H.
+          * reflexivity.
+          * reflexivity.
+  Qed.
   End Exercice3.
+
+  (*---------------------------- Exercice 4 ----------------------------*)
+
+  Module Exercice4.
+  Import Exercice1.
+  Import Exercice3.
+
+  Lemma Forall_le_lift :
+  forall a b l, a <= b -> Forall (le b) l -> Forall (le a) l.
+Proof.
+  intros a b l Hab H.
+  induction H.
+  - constructor.
+  - constructor.
+    + eapply Nat.le_trans; [exact Hab|exact H].
+    + exact IHForall.
+Qed.
+
+Lemma Forall_le_preserved_by_insert :
+  forall h a t,
+    Forall (le h) t ->
+    h <= a ->
+    Forall (le h) (insert a t).
+Proof.
+  intros h a t Hfor Hha.
+  induction Hfor as [|x xs Hhx Hfor' IH]; simpl.
+  - constructor; [assumption|constructor].
+  - destruct (Nat.leb a x) eqn:Habx.
+    + (* a <= x, list becomes a :: x :: xs *)
+      constructor; [assumption|].
+      constructor.
+      * eapply Nat.le_trans; [exact Hha|].
+        apply Nat.leb_le in Habx; exact Habx.
+      * exact Hfor'.
+    + (* a > x, list becomes x :: insert a xs *)
+      constructor; [assumption|].
+      apply IH; assumption.
+Qed.
+
+Lemma insert_sorted :
+  forall (a : nat) (l : list nat),
+    Sorted l ->
+    Sorted (insert a l).
+Proof.
+  intros a l Hs.
+  induction l as [|h t IH]; simpl.
+  - (* base: [a] *)
+    unfold Sorted. intros i j iv jv Hij Hi Hj.
+    destruct i as [|i']; simpl in Hi.
+    + inversion Hi; subst iv. destruct j as [|j']; [lia|].
+      simpl in Hj. destruct j'; inversion Hj.
+    + destruct j as [|j']; [lia|]. simpl in Hi. destruct i'; inversion Hi.
+  - destruct (Nat.leb a h) eqn:Ha_le_h.
+    + (* a <= h: a :: h :: t *)
+      pose proof (proj2 (Sorted_cons_iff h t) Hs) as [Ht Hfor_h].
+      pose proof (proj1 (Nat.leb_le a h) Ha_le_h) as Hah.  (* a <= h *)
+      assert (Forall (le a) (h :: t)) as Hforall_a.
+      { constructor.
+        - exact Hah.
+        - eapply Forall_le_lift; [exact Hah | exact Hfor_h]. }
+      (* Use proj1 : (Sorted (h::t) /\ Forall (le a) (h::t)) -> Sorted (a::h::t) *)
+      exact ((proj1 (Sorted_cons_iff a (h :: t))) (conj Hs Hforall_a)).
+    + (* a > h: h :: insert a t *)
+      pose proof (proj2 (Sorted_cons_iff h t) Hs) as [Ht Hfor_h].
+      specialize (IH Ht).
+      pose proof (proj1 (Nat.leb_gt a h) Ha_le_h) as Hagt.  (* h < a *)
+      assert (Forall (le h) (insert a t)) as Hforall_h.
+      { apply Forall_le_preserved_by_insert; [exact Hfor_h|].
+        apply Nat.lt_le_incl; exact Hagt. }
+      (* Again need pair -> Sorted (h :: insert a t) *)
+      exact ((proj1 (Sorted_cons_iff h (insert a t))) (conj IH Hforall_h)).
+Qed.
+
+
+
+
+
+
+  End Exercice4.
