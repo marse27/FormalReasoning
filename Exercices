@@ -408,15 +408,6 @@ Proof.
     + (* then: a stays; recurse on (z :: tl') *)
     specialize (IH z Hle_ztl).
     rewrite IH.
-    (* LHS has that ugly match; turn it back into bubble_pass (z :: tl') *)
-    replace (match tl' with
-             | [] => [z]
-             | y :: l' =>
-                 if z <? y then z :: bubble_pass (y :: l')
-                 else y :: bubble_pass (z :: l')
-             end)
-      with (bubble_pass (z :: tl'))
-      by (rewrite bubble_pass_equation; reflexivity).
     (* Normalize the RHS head-step using Haz = true *)
     assert (Hhead :
       bubble_pass (a :: z :: tl') = a :: bubble_pass (z :: tl')).
@@ -427,14 +418,6 @@ Proof.
     specialize (IH a Hle_a_tl').
     rewrite IH.
     (* Same trick on the LHS match, but for (a :: tl') *)
-    replace (match tl' with
-             | [] => [a]
-             | y :: l' =>
-                 if a <? y then a :: bubble_pass (y :: l')
-                 else y :: bubble_pass (a :: l')
-             end)
-      with (bubble_pass (a :: tl'))
-      by (rewrite bubble_pass_equation; reflexivity).
     (* Normalize RHS head-step with Haz = false *)
     assert (Hhead :
       bubble_pass (a :: z :: tl') = z :: bubble_pass (a :: tl')).
@@ -446,85 +429,20 @@ Qed.
   (*---------------------------- Exercice 6.3 - Hard ----------------------------*)
 
 
-
 Lemma bubble_pass_snoc :
   forall (a: nat) (l: list nat),
     list_max l <= a ->
     bubble_pass (l ++ [a]) = bubble_pass l ++ [a].
 Proof.
-  intros a l Hle.
-  revert a Hle.
-  induction l as [| x tl IH]; intros a Hle; simpl.
+  intros a l H.
+  destruct l as [| x tl]; simpl.
   - (* l = [] *)
-    rewrite bubble_pass_equation. rewrite bubble_pass_equation. reflexivity.
-  - destruct tl as [| y tl']; simpl in *.
-    + (* l = [x] *)
-      rewrite bubble_pass_equation.          (* bubble_pass [x; a] *)
-      destruct (x <? a) eqn:Hxa; simpl.
-      * rewrite bubble_pass_equation.  rewrite bubble_pass_equation. reflexivity.
-      * (* x <? a = false ⇒ a <= x, and from Hle we also get x <= a *)
-  apply Nat.ltb_ge in Hxa as Hax.            (* Hax : a <= x *)
-  assert (Hxle : x <= a)
-    by (eapply Nat.le_trans; [apply Nat.le_max_l | exact Hle]).
-  assert (Hx_eq : x = a)
-    by (apply Nat.le_antisymm; [exact Hxle | exact Hax]).
-  subst. rewrite bubble_pass_equation. reflexivity.
-    + (* l = x :: y :: tl' *)
-      (* From max x (max y (list_max tl')) <= a, derive:
-         - list_max (y :: tl') <= a
-         - list_max (x :: tl') <= a *)
-      assert (Hle_ytl : list_max (y :: tl') <= a).
-      { eapply Nat.le_trans; [apply Nat.le_max_r|exact Hle]. }
-      assert (Hle_tl : list_max tl' <= a).
-      { eapply Nat.le_trans; [apply Nat.le_max_r|exact Hle_ytl]. }
-      assert (Hx_le : x <= a).
-      { eapply Nat.le_trans; [apply Nat.le_max_l|exact Hle]. }
-      assert (Hle_xtl : list_max (x :: tl') <= a).
-      { simpl. apply Nat.max_lub; [exact Hx_le|exact Hle_tl]. }
+    rewrite bubble_pass_equation, bubble_pass_equation. reflexivity.
+  - (* l = x :: tl *)
+    (* reuse the auxiliary with head x, tail tl, bound a *)
+    apply bubble_pass_snoc_aux. exact H.
+Qed.
 
-      (* Unfold one bubble step on both sides and align by the same guard *)
-      rewrite bubble_pass_equation.
-      destruct (x <? y) eqn:Hxy; simpl.
-      * (* then-branch: x stays, recurse on (y :: tl') *)
-        specialize (IH a Hle_ytl).
-        rewrite IH.                          (* bubble_pass (y :: tl' ++ [a]) *)
-        (* move ++[a] out of the cons, match RHS shape *)
-        rewrite bubble_pass_equation. 
-        (* fold the big match back so we can actually reason *)
-replace (match tl' with
-         | [] => [y]
-         | y0 :: l' =>
-             if y <? y0 then y :: bubble_pass (y0 :: l')
-             else y0 :: bubble_pass (y :: l')
-         end)
-  with (bubble_pass (y :: tl'))
-  by (rewrite bubble_pass_equation; reflexivity).
-
-(* put ++ [a] outside the cons on the LHS *)
-rewrite -> app_comm_cons.
-(* LHS is now: (x :: bubble_pass (y :: tl')) ++ [a] *)
-
-(* expose the head-step on the RHS WITHOUT rewriting Hxy in the goal *)
-assert (Hhead :
-  bubble_pass (x :: y :: tl') = x :: bubble_pass (y :: tl'))
-  by (rewrite bubble_pass_equation;
-      destruct (x <? y) eqn:E; [reflexivity | congruence]).  (* uses Hxy *)
-
-rewrite Hhead.
-reflexivity.
-
-      * 
-        assert (Hhead' :
-          bubble_pass (x :: y :: tl') = y :: bubble_pass (x :: tl')).
-        { rewrite bubble_pass_equation.
-          destruct (x <? y); [congruence|reflexivity]. }
-        rewrite Hhead'.
-
-        (* 4) Reassociate to line up the ++ [a] tail. *)
-        rewrite <- app_comm_cons. apply f_equal. apply bubble_pass_snoc_aux. 
-
-
-Admitted.
 
 
   (*---------------------------- Exercice 6.4 - Hard ----------------------------*)
