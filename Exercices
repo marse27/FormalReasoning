@@ -255,22 +255,36 @@
   (*---------------------------- Exercice 6.1 ----------------------------*)
 
 
-Lemma bubble_pass_perm :
-  forall (l : list nat),
-    Permutation l (bubble_pass l).
-Proof.
-  intro l.
-  functional induction (bubble_pass l) using bubble_pass_ind.
-  - (* [] *) apply Permutation_refl.
-  - (* [x] *) apply Permutation_refl.
-  - (* x :: y :: l', with x <? y = true *)
-    apply perm_skip.
-    remember (y :: l') as r eqn:Hr. exact IHl0.
-  - (* x :: y :: l', with x <? y = false *)
-    eapply perm_trans.
-    + apply perm_swap.
-    + apply perm_skip. exact IHl0.
-Qed.
+  Lemma bubble_pass_perm :
+    forall (l : list nat),
+      Permutation l (bubble_pass l).
+  Proof.
+    intro l.
+    functional induction (bubble_pass l) using bubble_pass_ind.
+    - (* [] *) apply Permutation_refl.
+    - (* [x] *) apply Permutation_refl.
+    - (* x :: y :: l', with x <? y = true *)
+      apply perm_skip.
+      remember (y :: l') as r eqn:Hr. exact IHl0.
+    - (* x :: y :: l', with x <? y = false *)
+      eapply perm_trans.
+      + apply perm_swap.
+      + apply perm_skip. exact IHl0.
+  Qed.
+
+  (*---------------------------- Exercice 6.2 ----------------------------*)
+
+  Lemma bubble_pass_perm_iter :
+    forall (n : nat) (l : list nat),
+      Permutation l (Nat.iter n bubble_pass l).
+  Proof.
+    induction n as [| n IH]; intros l; simpl.
+    - apply Permutation_refl.
+    - eapply Permutation_trans.
+      + apply IH.
+      + apply bubble_pass_perm.
+  Qed.
+
 
 
   End Exercice6.
