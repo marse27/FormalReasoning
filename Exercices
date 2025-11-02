@@ -230,7 +230,7 @@
 
   (*---------------------------- Exercice 6 - Moderate ----------------------------*)
 
-  Module Exercice6.
+  Module Exercice6Moderate.
 
   Function bubble_pass (l: list nat) {measure length}: list nat :=
     match l with
@@ -252,7 +252,7 @@
   Definition bubble_sort (l: list nat): list nat :=
     Nat.iter (length l) bubble_pass l.
 
-  (*---------------------------- Exercice 6.1 ----------------------------*)
+  (*---------------------------- Exercice 6.1 - Moderate ----------------------------*)
 
 
   Lemma bubble_pass_perm :
@@ -272,7 +272,7 @@
       + apply perm_skip. exact IHl0.
   Qed.
 
-  (*---------------------------- Exercice 6.2 ----------------------------*)
+  (*---------------------------- Exercice 6.2 - Moderate ----------------------------*)
 
   Lemma bubble_pass_perm_iter :
     forall (n : nat) (l : list nat),
@@ -285,7 +285,7 @@
       + apply bubble_pass_perm.
   Qed.
 
-  (*---------------------------- Exercice 6.3 ----------------------------*)
+  (*---------------------------- Exercice 6.3 - Moderate ----------------------------*)
 
   Lemma bubble_sort_perm :
     forall (l : list nat),
@@ -296,5 +296,85 @@
     apply bubble_pass_perm_iter.
   Qed.
 
-  End Exercice6.
+  End Exercice6Moderate.
+
+  (*---------------------------- Exercice 6 - Hard ----------------------------*)
+
+  Module Exercice6Hard.
+
+  Function bubble_pass (l: list nat) {measure length}: list nat :=
+    match l with
+      | [] => []
+      | [x] => [x]
+      | x :: y :: l' =>
+        if x <? y then
+          x :: bubble_pass (y :: l')
+        else
+          y :: bubble_pass (x :: l')
+    end.
+  Proof.
+    all:
+      intros;
+      simpl;
+      lia.
+  Qed.
+
+  Definition bubble_sort (l: list nat): list nat :=
+    Nat.iter (length l) bubble_pass l.
+
+  Fixpoint list_max (l : list nat) :=
+  match l with
+  | [] => 0
+  | x::xs => Nat.max x (list_max xs)
+  end.
+
+  (*---------------------------- Exercice 6.1 - Hard ----------------------------*)
+
+Lemma bubble_pass_moves_max_to_tail :
+  forall (a : nat) (l : list nat),
+    exists (b : nat) (l' : list nat),
+      bubble_pass (a :: l) = l' ++ [b] /\ list_max (a :: l) = b.
+Proof.
+  intros.
+  revert a.
+  induction l as [| x tl IH]; intros a; simpl.
+  - exists a, []. split.
+    + rewrite bubble_pass_equation. reflexivity.
+    + rewrite Nat.max_0_r. reflexivity.
+  - rewrite bubble_pass_equation.
+    destruct tl as [| y tl'].
+    + destruct (a <? x) eqn:Hax; simpl.
+      * exists x, [a]. split. rewrite bubble_pass_equation. reflexivity.
+        rewrite Nat.max_0_r. apply Nat.max_r. apply Nat.ltb_lt in Hax; lia.
+      * exists a, [x]. split. rewrite bubble_pass_equation. reflexivity.
+        rewrite Nat.max_0_r. apply Nat.max_l. apply Nat.ltb_ge in Hax; lia.
+    + destruct (a <? x) eqn:Hax; simpl.
+      * pose proof (IH x) as [b [l1 [Hbub Hmax]]].
+        rewrite Hbub. exists b, (a :: l1). split; [reflexivity|].
+        replace (Nat.max x (Nat.max y (list_max tl')))
+        with (list_max (x :: y :: tl')) by (simpl; reflexivity). rewrite Hmax. apply Nat.max_r.
+        assert (Hx_le_b : x <= b).
+        { rewrite <- Hmax. simpl. apply Nat.le_max_l. } 
+        apply Nat.le_trans with (m := x).
+          -- (* a ≤ x *)
+            apply Nat.lt_le_incl.                (* turn < into ≤ *)
+            apply Nat.ltb_lt in Hax; exact Hax.  (* from a<?x=true get a<x *)
+          -- (* x ≤ b *)
+            exact Hx_le_b.
+      * pose proof (IH a) as [b [l1 [Hbub Hmax]]].
+        rewrite Hbub. exists b, (x :: l1). split; [reflexivity|].
+        apply Nat.ltb_ge in Hax.  (* Hax : x ≤ a *)
+        (* reassociate so (Nat.max a x) appears, then kill it using x ≤ a *)
+        rewrite Nat.max_assoc.
+        rewrite (Nat.max_l _ _ Hax).  (* turns Nat.max a x into a *)
+        (* Now the goal is exactly list_max (a :: y :: tl') = b *)
+        simpl in Hmax. simpl in Hmax.  (* list_max (a::y::tl') ⇒ Nat.max a (Nat.max y (list_max tl')) *)
+        exact Hmax.
+Qed.
+
+
+
+
+  End Exercice6Hard.
+
 
