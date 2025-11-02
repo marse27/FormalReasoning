@@ -227,3 +227,51 @@
   Qed.
 
   End Exercice5.
+
+  (*---------------------------- Exercice 6 - Moderate ----------------------------*)
+
+  Module Exercice6.
+
+  Function bubble_pass (l: list nat) {measure length}: list nat :=
+    match l with
+      | [] => []
+      | [x] => [x]
+      | x :: y :: l' =>
+        if x <? y then
+          x :: bubble_pass (y :: l')
+        else
+          y :: bubble_pass (x :: l')
+    end.
+  Proof.
+    all:
+      intros;
+      simpl;
+      lia.
+  Qed.
+
+  Definition bubble_sort (l: list nat): list nat :=
+    Nat.iter (length l) bubble_pass l.
+
+  (*---------------------------- Exercice 6.1 ----------------------------*)
+
+
+Lemma bubble_pass_perm :
+  forall (l : list nat),
+    Permutation l (bubble_pass l).
+Proof.
+  intro l.
+  functional induction (bubble_pass l) using bubble_pass_ind.
+  - (* [] *) apply Permutation_refl.
+  - (* [x] *) apply Permutation_refl.
+  - (* x :: y :: l', with x <? y = true *)
+    apply perm_skip.
+    remember (y :: l') as r eqn:Hr. exact IHl0.
+  - (* x :: y :: l', with x <? y = false *)
+    eapply perm_trans.
+    + apply perm_swap.
+    + apply perm_skip. exact IHl0.
+Qed.
+
+
+  End Exercice6.
+
