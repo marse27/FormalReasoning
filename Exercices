@@ -330,49 +330,177 @@
 
   (*---------------------------- Exercice 6.1 - Hard ----------------------------*)
 
-Lemma bubble_pass_moves_max_to_tail :
-  forall (a : nat) (l : list nat),
-    exists (b : nat) (l' : list nat),
-      bubble_pass (a :: l) = l' ++ [b] /\ list_max (a :: l) = b.
+  Lemma bubble_pass_moves_max_to_tail :
+    forall (a : nat) (l : list nat),
+      exists (b : nat) (l' : list nat),
+        bubble_pass (a :: l) = l' ++ [b] /\ list_max (a :: l) = b.
+  Proof.
+    intros.
+    revert a.
+    induction l as [| x tl IH]; intros a; simpl.
+    - exists a, []. split.
+      + rewrite bubble_pass_equation. reflexivity.
+      + rewrite Nat.max_0_r. reflexivity.
+    - rewrite bubble_pass_equation.
+      destruct tl as [| y tl'].
+      + destruct (a <? x) eqn:Hax; simpl.
+        * exists x, [a]. split. rewrite bubble_pass_equation. reflexivity.
+          rewrite Nat.max_0_r. apply Nat.max_r. apply Nat.ltb_lt in Hax; lia.
+        * exists a, [x]. split. rewrite bubble_pass_equation. reflexivity.
+          rewrite Nat.max_0_r. apply Nat.max_l. apply Nat.ltb_ge in Hax; lia.
+      + destruct (a <? x) eqn:Hax; simpl.
+        * pose proof (IH x) as [b [l1 [Hbub Hmax]]].
+          rewrite Hbub. exists b, (a :: l1). split; [reflexivity|].
+          replace (Nat.max x (Nat.max y (list_max tl')))
+          with (list_max (x :: y :: tl')) by (simpl; reflexivity). rewrite Hmax. apply Nat.max_r.
+          assert (Hx_le_b : x <= b).
+          { rewrite <- Hmax. simpl. apply Nat.le_max_l. } 
+          apply Nat.le_trans with (m := x).
+            -- (* a ≤ x *)
+              apply Nat.lt_le_incl.                (* turn < into ≤ *)
+              apply Nat.ltb_lt in Hax; exact Hax.  (* from a<?x=true get a<x *)
+            -- (* x ≤ b *)
+              exact Hx_le_b.
+        * pose proof (IH a) as [b [l1 [Hbub Hmax]]]. 
+          rewrite Hbub. exists b, (x :: l1). split; [reflexivity|].
+          apply Nat.ltb_ge in Hax.  (* Hax : x ≤ a *)
+          (* reassociate so (Nat.max a x) appears, then kill it using x ≤ a *)
+          rewrite Nat.max_assoc.
+          rewrite (Nat.max_l _ _ Hax).  (* turns Nat.max a x into a *)
+          (* Now the goal is exactly list_max (a :: y :: tl') = b *)
+          simpl in Hmax. simpl in Hmax.  (* list_max (a::y::tl') ⇒ Nat.max a (Nat.max y (list_max tl')) *)
+          exact Hmax.
+  Qed.
+
+
+  (*---------------------------- Exercice 6.2 - Hard ----------------------------*)
+
+Lemma bubble_pass_snoc_aux_strict :
+  forall (a b: nat) (l: list nat),
+    list_max (a :: l) < b ->
+    bubble_pass (a :: l ++ [b]) = bubble_pass (a :: l) ++ [b].
 Proof.
-  intros.
-  revert a.
-  induction l as [| x tl IH]; intros a; simpl.
-  - exists a, []. split.
-    + rewrite bubble_pass_equation. reflexivity.
-    + rewrite Nat.max_0_r. reflexivity.
-  - rewrite bubble_pass_equation.
+  intros a b l Hlt.
+  revert a b Hlt.
+  induction l as [| x tl IH]; intros a b Hlt; simpl in *.
+  - (* l = [] *)
+    (* list_max [a] = a, so a < b *)
+    rewrite bubble_pass_equation.
+    destruct (a <? b) eqn:Hab.
+    + rewrite bubble_pass_equation. rewrite bubble_pass_equation. reflexivity.
+    + apply Nat.ltb_ge in Hab; lia. 
+  - (* l = x :: tl *)
+    rewrite bubble_pass_equation.
     destruct tl as [| y tl'].
-    + destruct (a <? x) eqn:Hax; simpl.
-      * exists x, [a]. split. rewrite bubble_pass_equation. reflexivity.
-        rewrite Nat.max_0_r. apply Nat.max_r. apply Nat.ltb_lt in Hax; lia.
-      * exists a, [x]. split. rewrite bubble_pass_equation. reflexivity.
-        rewrite Nat.max_0_r. apply Nat.max_l. apply Nat.ltb_ge in Hax; lia.
-    + destruct (a <? x) eqn:Hax; simpl.
-      * pose proof (IH x) as [b [l1 [Hbub Hmax]]].
-        rewrite Hbub. exists b, (a :: l1). split; [reflexivity|].
-        replace (Nat.max x (Nat.max y (list_max tl')))
-        with (list_max (x :: y :: tl')) by (simpl; reflexivity). rewrite Hmax. apply Nat.max_r.
-        assert (Hx_le_b : x <= b).
-        { rewrite <- Hmax. simpl. apply Nat.le_max_l. } 
-        apply Nat.le_trans with (m := x).
-          -- (* a ≤ x *)
-            apply Nat.lt_le_incl.                (* turn < into ≤ *)
-            apply Nat.ltb_lt in Hax; exact Hax.  (* from a<?x=true get a<x *)
-          -- (* x ≤ b *)
-            exact Hx_le_b.
-      * pose proof (IH a) as [b [l1 [Hbub Hmax]]].
-        rewrite Hbub. exists b, (x :: l1). split; [reflexivity|].
-        apply Nat.ltb_ge in Hax.  (* Hax : x ≤ a *)
-        (* reassociate so (Nat.max a x) appears, then kill it using x ≤ a *)
-        rewrite Nat.max_assoc.
-        rewrite (Nat.max_l _ _ Hax).  (* turns Nat.max a x into a *)
-        (* Now the goal is exactly list_max (a :: y :: tl') = b *)
-        simpl in Hmax. simpl in Hmax.  (* list_max (a::y::tl') ⇒ Nat.max a (Nat.max y (list_max tl')) *)
-        exact Hmax.
+    + (* derive a < b *)
+      assert (Hab : a < b) by
+        (eapply Nat.le_lt_trans; [apply Nat.le_max_l | exact Hlt]).
+
+      (* derive x < b *)
+      assert (Hxb : x < b).
+      { eapply Nat.le_lt_trans.
+        - (* x <= max a (max x (list_max [])) *)
+          eapply Nat.le_trans.
+          + (* x <= max x (list_max []) *)
+            apply Nat.le_max_l.
+          + (* max x (list_max []) <= max a (max x (list_max [])) *)
+            apply Nat.le_max_r.
+        - exact Hlt.
+      }
+      (* tl = [] branch *)
+      (* tl = [] branch *)
+      rewrite bubble_pass_equation.
+      rewrite app_nil_l.                 (* [] ++ [b] -> [b] *)
+      rewrite !bubble_pass_equation.
+
+      destruct (a <? x) eqn:HaX.
+      -- (* a < x *)
+        apply Nat.ltb_lt in Hxb.         (* x <? b = true *)
+        apply Nat.ltb_lt in Hab.         (* a <? b = true *)
+        simpl. rewrite Hxb. reflexivity.
+      -- (* a >= x *)
+        apply Nat.ltb_lt in Hab.         (* a <? b = true *)
+        simpl. rewrite Hab. reflexivity.
+
+    + (* general case: x :: y :: tl' *)
+      destruct (a <? x) eqn:HaX.
+      *  rewrite bubble_pass_equation. simpl.
+
+  (* fold the big match back so IH matches *)
+  replace (match (y :: tl') ++ [b] with
+           | [] => [x]
+           | y0 :: l' =>
+               if x <? y0 then x :: bubble_pass (y0 :: l')
+               else y0 :: bubble_pass (x :: l')
+           end)
+    with (bubble_pass (x :: (y :: tl') ++ [b]))
+    by (rewrite bubble_pass_equation; reflexivity).
+
+  (* IH at a := x and the same b *)
+  assert (Hltx : Nat.max x (list_max (y :: tl')) < b)
+    by (eapply Nat.le_lt_trans; [apply Nat.le_max_r | exact Hlt]).
+  pose proof (IH x b Hltx) as IHxEq.
+  replace (if x <? y then x :: bubble_pass (y :: tl' ++ [b])
+        else y :: bubble_pass (x :: tl' ++ [b]))
+  with (bubble_pass (x :: (y :: tl') ++ [b]))
+  by (rewrite bubble_pass_equation; reflexivity).
+
+(* Goal is now: a :: bubble_pass (x :: (y :: tl') ++ [b]) = bubble_pass (a :: x :: y :: tl') ++ [b] *)
+
+(* 2) Rewrite inside the cons using IHxEq *)
+rewrite IHxEq.
+(* LHS becomes: a :: (bubble_pass (x :: y :: tl') ++ [b]) *)
+
+(* 3) Expose the same head-step on the RHS WITHOUT rewriting HaX in the goal *)
+assert (Hhead :
+  bubble_pass (a :: x :: y :: tl') = a :: bubble_pass (x :: y :: tl'))
+  by (rewrite bubble_pass_equation; destruct (a <? x); [reflexivity|congruence]).
+rewrite Hhead.
+
+(* 4) Finish with the usual associativity trick *)
+rewrite app_comm_cons. reflexivity.
+   * rewrite bubble_pass_equation. simpl.
+
+  (* fold the big match back so IH matches *)
+  replace (match (y :: tl') ++ [b] with
+           | [] => [a]
+           | y0 :: l' =>
+               if a <? y0 then a :: bubble_pass (y0 :: l')
+               else y0 :: bubble_pass (a :: l')
+           end)
+    with (bubble_pass (a :: (y :: tl') ++ [b]))
+    by (rewrite bubble_pass_equation; reflexivity).
+
+  (* from a <? x = false get x <= a and drop x from max *)
+  apply Nat.ltb_ge in HaX as Hge.  (* x <= a *)
+  assert (HltA : Nat.max a (list_max (y :: tl')) < b).
+  { simpl in Hlt. rewrite Nat.max_assoc in Hlt.
+    rewrite (Nat.max_l _ _ Hge) in Hlt. exact Hlt. }
+
+  (* IH at a := a and the same b *)
+  pose proof (IH a b HltA) as IHaEq.
+  replace (if a <? y then a :: bubble_pass (y :: tl' ++ [b])
+        else y :: bubble_pass (a :: tl' ++ [b]))
+  with (bubble_pass (a :: (y :: tl') ++ [b]))
+  by (rewrite bubble_pass_equation; reflexivity).
+
+(* derive x <= a from HaX=false, drop x from the outer max to build IH a b premise, apply IH *)
+
+(* normalize RHS head without rewriting HaX *)
+assert (Hhead' :
+  bubble_pass (a :: x :: y :: tl') = x :: bubble_pass (a :: y :: tl'))
+  by (rewrite bubble_pass_equation; destruct (a <? x); [congruence|reflexivity]).
+rewrite Hhead'. rewrite IHaEq.
+
+rewrite <- app_comm_cons.
+(* now the goal is: x :: bubble_pass ((a :: y :: tl') ++ [b])
+                     = x :: (bubble_pass (a :: y :: tl') ++ [b]) *)
+
+(* rewrite the tail with your IH result *)
+
+reflexivity.
+
 Qed.
-
-
 
 
   End Exercice6Hard.
