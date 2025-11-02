@@ -472,7 +472,6 @@ Proof.
 Qed.
 
 
-
 (* One-liner corollary *)
 Lemma bubble_pass_max_le :
   forall l, list_max (bubble_pass l) <= list_max l.
@@ -504,9 +503,57 @@ Proof.
 Qed.
 
 
-
-
-
   End Exercice6Hard.
 
+
+  (*---------------------------- Exercice 6 - Very Hard ----------------------------*)
+
+  Module Exercice6VeryHard.
+
+  Function bubble_pass (l: list nat) {measure length}: list nat :=
+  match l with
+    | [] => []
+    | [x] => [x]
+    | x :: y :: l' =>
+      if x <? y then
+        x :: bubble_pass (y :: l')
+      else
+        y :: bubble_pass (x :: l')
+  end.
+  Proof.
+    all:
+      intros;
+      simpl;
+      lia.
+  Qed.
+
+  Definition bubble_sort (l: list nat): list nat :=
+    Nat.iter (length l) bubble_pass l.
+
+  (*---------------------------- Exercice 6.1 - Very Hard ----------------------------*)
+
+
+  Lemma SSorted_snoc:
+    forall {T: Type} (R: T -> T -> Prop) (t: T) (l: list T),
+      StronglySorted R l ->
+        Forall (fun (x: T) => R x t) l ->
+          StronglySorted R (l ++ [t]).
+  Proof.
+    intros T R t l Hss.
+    revert t.
+    induction Hss as [| a l' Hss IH Hall]; intros t Ht; simpl.
+    - (* l = [] *)
+      constructor. constructor. constructor.
+    - (* l = a :: l' *)
+      inversion Ht as [| ? ? Hat Ht']; subst.
+      constructor.
+      + (* tail stays strongly sorted *)
+        apply IH. exact Ht'.
+      + (* every element in tail is <= a, and also a <= t *)
+        apply Forall_app; split.
+        * exact Hall.
+        * constructor; [exact Hat | constructor].
+  Qed.
+
+  End Exercice6VeryHard
 
