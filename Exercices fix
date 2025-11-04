@@ -448,78 +448,85 @@ Qed.
   (*---------------------------- Exercice 6.3 - Hard ----------------------------*)
 
 
-Lemma bubble_pass_snoc :
-  forall (a: nat) (l: list nat),
-    list_max l <= a ->
-    bubble_pass (l ++ [a]) = bubble_pass l ++ [a].
-Proof.
-  intros a l H.
-  destruct l as [| x tl]; simpl.
-  - (* l = [] *)
-    rewrite bubble_pass_equation, bubble_pass_equation. reflexivity.
-  - (* l = x :: tl *)
-    (* reuse the auxiliary with head x, tail tl, bound a *)
-    apply bubble_pass_snoc_aux. exact H.
-Qed.
+  Lemma bubble_pass_snoc:
+    forall (a: nat) (l: list nat),
+      list_max l <= a ->
+        bubble_pass (l ++ [a]) = bubble_pass l ++ [a].
+  Proof.
+    intros a l H.
+    destruct l as [| x tl]; simpl.
+    - rewrite bubble_pass_equation.
+      rewrite bubble_pass_equation.
+      simpl. 
+      reflexivity.
+    - apply bubble_pass_snoc_aux. 
+      exact H.
+  Qed.
 
 
 
   (*---------------------------- Exercice 6.4 - Hard ----------------------------*)
-(* Stronger helper with the right quantifiers: generalize z before inducting on tl *)
-Lemma bubble_pass_cons_max_le :
-  forall z tl, list_max (bubble_pass (z :: tl)) <= Nat.max z (list_max tl).
-Proof.
-  (* introduce both in the right order, then keep z generic during IH on tl *)
-  intros z tl.
-  revert z.
-  induction tl as [| y tl IH]; intro z; simpl.
-  - rewrite bubble_pass_equation. simpl. lia.
-  - rewrite bubble_pass_equation. simpl.
-    destruct (z <? y) eqn:Hz; simpl.
-    + (* z :: bubble_pass (y :: tl) *)
-      apply Nat.max_lub.
-      * apply Nat.le_max_l.
-      * specialize (IH y).                       (* <= max y (list_max tl) *)
-        eapply Nat.le_trans; [exact IH|].
-        apply Nat.le_max_r.                      (* lift into max z ... *)
-    + (* y :: bubble_pass (z :: tl) *)
-      apply Nat.max_lub.
-      * eapply Nat.le_trans; [apply Nat.le_max_l|]. apply Nat.le_max_r.
-      * specialize (IH z).                       (* <= max z (list_max tl) *)
-        eapply Nat.le_trans; [exact IH|].
-        lia.
-Qed.
+  Lemma bubble_pass_cons_max_le :
+    forall z tl, list_max (bubble_pass (z :: tl)) <= Nat.max z (list_max tl).
+  Proof.
+    intros z tl.
+    revert z.
+    induction tl as [| y tl IH]; intro z; simpl.
+    - rewrite bubble_pass_equation.
+      simpl. 
+      lia.
+    - rewrite bubble_pass_equation. 
+      destruct (z <? y) eqn:Hz; simpl.
+      + apply Nat.max_lub.
+        * apply Nat.le_max_l.
+        * specialize (IH y).
+          eapply Nat.le_trans.
+            ++ exact IH.
+            ++ apply Nat.le_max_r.
+      + apply Nat.max_lub.
+        * eapply Nat.le_trans.
+            ++ apply Nat.le_max_l. 
+            ++ apply Nat.le_max_r.
+        * specialize (IH z).
+          eapply Nat.le_trans.
+            ++ exact IH.
+            ++ lia.
+  Qed.
 
+  Lemma bubble_pass_max_le :
+    forall l, list_max (bubble_pass l) <= list_max l.
+  Proof.
+    destruct l as [|x tl]; simpl.
+    - rewrite bubble_pass_equation. 
+      simpl. 
+      apply Nat.le_refl.
+    - apply bubble_pass_cons_max_le.
+  Qed.
 
-(* One-liner corollary *)
-Lemma bubble_pass_max_le :
-  forall l, list_max (bubble_pass l) <= list_max l.
-Proof.
-  destruct l as [|x tl]; simpl.
-  - rewrite bubble_pass_equation. simpl. apply Nat.le_refl.
-  - apply bubble_pass_cons_max_le.
-Qed.
+  Lemma list_max_iter_bubble_pass_le :
+    forall n l, list_max (Nat.iter n bubble_pass l) <= list_max l.
+  Proof.
+    induction n as [|n IH]; intros l; simpl.
+    - apply Nat.le_refl.
+    - eapply Nat.le_trans.
+      + apply bubble_pass_max_le.
+      + apply IH.
+  Qed.
 
-Lemma list_max_iter_bubble_pass_le :
-  forall n l, list_max (Nat.iter n bubble_pass l) <= list_max l.
-Proof.
-  induction n as [|n IH]; intros l; simpl.
-  - apply Nat.le_refl.
-  - eapply Nat.le_trans; [apply bubble_pass_max_le|apply IH].
-Qed.
-
-Lemma bubble_pass_snoc_iter :
-  forall (a n: nat) (l: list nat),
-    list_max l <= a ->
-    Nat.iter n bubble_pass (l ++ [a]) = Nat.iter n bubble_pass l ++ [a].
-Proof.
-  intros a n l Hle.
-  induction n as [|n IH]; simpl.
-  - reflexivity.
-  - rewrite IH.
-    apply bubble_pass_snoc.
-    eapply Nat.le_trans; [apply list_max_iter_bubble_pass_le|exact Hle].
-Qed.
+  Lemma bubble_pass_snoc_iter:
+    forall (a n: nat) (l: list nat),
+      list_max l <= a ->
+        Nat.iter n bubble_pass (l ++ [a]) = Nat.iter n bubble_pass l ++ [a].
+  Proof.
+    intros a n l Hle.
+    induction n as [|n IH]; simpl.
+    - reflexivity.
+    - rewrite IH.
+      apply bubble_pass_snoc.
+      eapply Nat.le_trans.
+        + apply list_max_iter_bubble_pass_le.
+        + exact Hle.
+  Qed.
 
 
   End Exercice6Hard.
