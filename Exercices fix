@@ -138,9 +138,10 @@
     - constructor.
     - constructor.
       + assert (a <= y) as Hay.
-        { apply (Nat.le_trans a x y).
-          * exact Hax.
-          * exact Hyx.
+        { 
+          apply (Nat.le_trans a x y).
+            * exact Hax.
+            * exact Hyx.
         }
         exact Hay.
       + exact IH.
@@ -169,7 +170,8 @@ Proof.
     + constructor.
       * exact Hy.
       * assert (Forall (fun z => x <= z) (insert a ys)) as Htail.
-        { apply IH.
+        { 
+          apply IH.
           exact Hxa'.
         }
         exact Htail.
@@ -340,7 +342,8 @@ Qed.
                  assert (Hx_le_b : x <= b).
                  { rewrite <- Hmax. 
                    simpl. 
-                   apply Nat.le_max_l. } 
+                   apply Nat.le_max_l. 
+                 } 
                  apply Nat.le_trans with (m := x).
                    -- apply Nat.lt_le_incl.
                       apply Nat.ltb_lt in Hax. 
@@ -362,56 +365,85 @@ Qed.
 
   (*---------------------------- Exercice 6.2 - Hard ----------------------------*)
 
-Lemma bubble_pass_snoc_aux :
-  forall (a b: nat) (l: list nat),
-    list_max (a :: l) <= b ->
-    bubble_pass (a :: l ++ [b]) = bubble_pass (a :: l) ++ [b].
-Proof.
-  intros a b l.
-  revert a.                                 (* ← generalize the head *)
-  induction l as [| z tl' IH]; intros a Hle; simpl.
-  - (* l = [] *)
-    rewrite bubble_pass_equation.
-    destruct (a <? b) eqn:Hab; simpl.
-    + rewrite bubble_pass_equation. rewrite bubble_pass_equation.  reflexivity.
-    + apply Nat.ltb_ge in Hab as Hba.       (* b <= a *)
-      assert (Ha_le : a <= b)
-        by (simpl in Hle; eapply Nat.le_trans; [apply Nat.le_max_l| exact Hle]).
-      apply Nat.le_antisymm in Ha_le; [subst|exact Hba].
-      rewrite bubble_pass_equation. reflexivity.
-  - (* l = z :: tl' *)
-    simpl in Hle.                            (* max a (max z (list_max tl')) <= b *)
-    assert (Hle_ztl : list_max (z :: tl') <= b)
-      by (eapply Nat.le_trans; [apply Nat.le_max_r| exact Hle]).
-    assert (Ha_le : a <= b)
-      by (eapply Nat.le_trans; [apply Nat.le_max_l| exact Hle]).
-    assert (Hle_tl' : list_max tl' <= b)
-      by (eapply Nat.le_trans; [apply Nat.le_max_r| exact Hle_ztl]).
-    assert (Hle_a_tl' : list_max (a :: tl') <= b).
-    { simpl. apply Nat.max_lub; [exact Ha_le| exact Hle_tl']. }
-
-    rewrite bubble_pass_equation.
-    destruct (a <? z) eqn:Haz; simpl.
-    + (* then: a stays; recurse on (z :: tl') *)
-    specialize (IH z Hle_ztl).
-    rewrite IH.
-    (* Normalize the RHS head-step using Haz = true *)
-    assert (Hhead :
-      bubble_pass (a :: z :: tl') = a :: bubble_pass (z :: tl')).
-    { rewrite bubble_pass_equation. rewrite Haz. reflexivity. }
-    rewrite Hhead.
-    reflexivity.
-    + (* else: z stays; recurse on (a :: tl') *)
-    specialize (IH a Hle_a_tl').
-    rewrite IH.
-    (* Same trick on the LHS match, but for (a :: tl') *)
-    (* Normalize RHS head-step with Haz = false *)
-    assert (Hhead :
-      bubble_pass (a :: z :: tl') = z :: bubble_pass (a :: tl')).
-    { rewrite bubble_pass_equation. rewrite Haz. reflexivity. }
-    rewrite Hhead.
-    reflexivity.
-Qed.
+  Lemma bubble_pass_snoc_aux:
+    forall (a b: nat) (l: list nat),
+      list_max (a :: l) <= b ->
+        bubble_pass (a :: l ++ [b]) = bubble_pass (a :: l) ++ [b].
+  Proof.
+    intros a b l.
+    revert a.
+    induction l as [| z tl' IH]; intros a Hle; simpl.
+    - rewrite bubble_pass_equation.
+      destruct (a <? b) eqn:Hab; simpl.
+      + rewrite bubble_pass_equation. 
+        rewrite bubble_pass_equation. 
+        simpl. 
+        reflexivity.
+      + apply Nat.ltb_ge in Hab as Hba.
+        assert (Ha_le : a <= b).
+        {
+          simpl in Hle.
+          eapply Nat.le_trans.
+          - apply Nat.le_max_l.
+          - exact Hle.
+        }
+        apply Nat.le_antisymm in Ha_le. 
+          * subst. 
+            rewrite bubble_pass_equation. 
+            simpl. 
+            reflexivity.
+          * exact Hba.
+    - simpl in Hle.
+      assert (Hle_ztl : list_max (z :: tl') <= b).
+      {
+        eapply Nat.le_trans.
+          - apply Nat.le_max_r.
+          - exact Hle.
+      }
+      assert (Ha_le : a <= b).
+      {
+        eapply Nat.le_trans.
+          - apply Nat.le_max_l.
+          - exact Hle.
+      }
+      assert (Hle_tl' : list_max tl' <= b).
+      {
+        eapply Nat.le_trans.
+          - apply Nat.le_max_r.
+          - exact Hle_ztl.
+      }
+      assert (Hle_a_tl' : list_max (a :: tl') <= b).
+      { 
+        simpl. 
+        apply Nat.max_lub.
+          - exact Ha_le.
+          - exact Hle_tl'.
+      }
+      rewrite bubble_pass_equation.
+      destruct (a <? z) eqn:Haz; simpl.
+        + specialize (IH z Hle_ztl).
+          rewrite IH.
+          assert (Hhead : bubble_pass (a :: z :: tl') = a :: bubble_pass (z :: tl')).
+          { 
+            rewrite bubble_pass_equation. 
+            rewrite Haz. 
+            reflexivity. 
+          }
+          rewrite Hhead.
+          simpl.
+          reflexivity.
+        + specialize (IH a Hle_a_tl').
+          rewrite IH.
+          assert (Hhead : bubble_pass (a :: z :: tl') = z :: bubble_pass (a :: tl')).
+          { 
+            rewrite bubble_pass_equation. 
+            rewrite Haz. 
+            reflexivity. 
+          }
+          rewrite Hhead.
+          simpl.
+          reflexivity.
+  Qed.
 
   (*---------------------------- Exercice 6.3 - Hard ----------------------------*)
 
@@ -492,57 +524,4 @@ Qed.
 
   End Exercice6Hard.
 
-
-  (*---------------------------- Exercice 6 - Very Hard ----------------------------*)
-
-  Module Exercice6VeryHard.
-
-  Function bubble_pass (l: list nat) {measure length}: list nat :=
-  match l with
-    | [] => []
-    | [x] => [x]
-    | x :: y :: l' =>
-      if x <? y then
-        x :: bubble_pass (y :: l')
-      else
-        y :: bubble_pass (x :: l')
-  end.
-  Proof.
-    all:
-      intros;
-      simpl;
-      lia.
-  Qed.
-
-  Definition bubble_sort (l: list nat): list nat :=
-    Nat.iter (length l) bubble_pass l.
-
-  (*---------------------------- Exercice 6.1 - Very Hard ----------------------------*)
-
-
-  Lemma SSorted_snoc:
-    forall {T: Type} (R: T -> T -> Prop) (t: T) (l: list T),
-      StronglySorted R l ->
-        Forall (fun (x: T) => R x t) l ->
-          StronglySorted R (l ++ [t]).
-  Proof.
-    intros T R t l Hss.
-    revert t.
-    induction Hss as [| a l' Hss IH Hall]; intros t Ht; simpl.
-    - (* l = [] *)
-      constructor. constructor. constructor.
-    - (* l = a :: l' *)
-      inversion Ht as [| ? ? Hat Ht']; subst.
-      constructor.
-      + (* tail stays strongly sorted *)
-        apply IH. exact Ht'.
-      + (* every element in tail is <= a, and also a <= t *)
-        apply Forall_app; split.
-        * exact Hall.
-        * constructor; [exact Hat | constructor].
-  Qed.
-
-  (*---------------------------- Exercice 6.2 - Very Hard ----------------------------*)
-
-  End Exercice6VeryHard
 
