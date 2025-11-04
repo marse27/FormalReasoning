@@ -83,15 +83,16 @@
     - intros [Hs Hl]. unfold Sorted in *.
       intros i j iv jv Hij Hi Hj.
       simpl in Hi, Hj.
-      destruct j as [| j']; [inversion Hij|].
-      destruct i as [| i'].
-      + inversion Hi; subst iv. 
-        simpl in Hj.
-        eapply Forall_forall in Hl. 
-          -- exact Hl. 
-          -- now apply nth_error_In in Hj.
-      + assert (i' < j') by lia. 
-        eapply Hs; eauto.
+      destruct j as [| j'].
+        + inversion Hij.
+        + destruct i as [| i'].
+          * inversion Hi; subst iv.
+            simpl in Hj.
+            eapply Forall_forall in Hl.
+            apply Hl.
+            now apply nth_error_In in Hj.
+          * assert (i' < j') by lia.
+            eapply Hs; eauto.
     - intros H. split.
       + unfold Sorted in *.
         intros i j iv jv Hij Hi Hj.
@@ -109,7 +110,8 @@
         assert (0 < S j') as Hlt by lia.
         specialize (H 0 (S j') a x Hlt).
         simpl in H.
-        rewrite Hj' in H. apply H.
+        rewrite Hj' in H.
+        apply H.
           * reflexivity.
           * reflexivity.
   Qed.
@@ -182,30 +184,30 @@ Qed.
     induction l as [|x xs IH]; intros a; simpl.
     - apply (proj1 (Sorted_cons_iff a [])).
       split. 
-        -- exact Hs.
-        -- constructor.
+        + exact Hs.
+        + constructor.
     - destruct (a <=? x) eqn:Hab.
-      + apply (proj1 (Sorted_cons_iff a (x :: xs))).
-        split.
-        --- exact Hs.
-        --- constructor.
-            ++ apply Nat.leb_le in Hab.
-               exact Hab.
-            ++ destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs Hforx].
-               eapply Forall_le_trans. 
-               apply Nat.leb_le in Hab. 
-               exact Hab.
-               exact Hforx.
-      + apply Nat.leb_gt in Hab.
-        apply (proj1 (Sorted_cons_iff x (insert a xs))).
-        split.
-         * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs _].
-           apply IH.
-           apply Hxs.
-         * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [_ Hforx].
-           apply Forall_le_insert.
-             ** exact Hforx. 
-             ** lia.
+        + apply (proj1 (Sorted_cons_iff a (x :: xs))).
+          split.
+            * exact Hs.
+            * constructor.
+                ++ apply Nat.leb_le in Hab.
+                   exact Hab.
+                ++ destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs Hforx].
+                   eapply Forall_le_trans. 
+                   apply Nat.leb_le in Hab. 
+                   exact Hab.
+                   exact Hforx.
+        + apply Nat.leb_gt in Hab.
+          apply (proj1 (Sorted_cons_iff x (insert a xs))).
+          split.
+            * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs _].
+               apply IH.
+               apply Hxs.
+            * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [_ Hforx].
+               apply Forall_le_insert.
+                 ++ exact Hforx. 
+                 ++ lia.
   Qed.
 
   (*---------------------------- Exercice 4.2 ----------------------------*)
@@ -308,19 +310,19 @@ Qed.
       + destruct (a <? x) eqn:Hax; simpl.
         * exists x, [a].
           split. 
-            -- rewrite bubble_pass_equation. 
+            ++ rewrite bubble_pass_equation. 
                simpl.
                reflexivity.
-            -- rewrite Nat.max_0_r. 
+            ++ rewrite Nat.max_0_r. 
                apply Nat.max_r. 
                apply Nat.ltb_lt in Hax.
                lia.
         * exists a, [x]. 
           split. 
-            -- rewrite bubble_pass_equation.
+            ++ rewrite bubble_pass_equation.
                simpl.
                reflexivity.
-            -- rewrite Nat.max_0_r. 
+            ++ rewrite Nat.max_0_r. 
                apply Nat.max_l. 
                apply Nat.ltb_ge in Hax.
                exact Hax.
