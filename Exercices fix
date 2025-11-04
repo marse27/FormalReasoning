@@ -123,16 +123,24 @@
   (*---------------------------- Exercice 4.1 ----------------------------*)
 
 
-Lemma Forall_le_trans :
+  Lemma Forall_le_trans :
   forall (l : list nat) (a x : nat),
     a <= x ->
     Forall (fun y => x <= y) l ->
     Forall (fun y => a <= y) l.
-Proof.
-  intros l a x Hax Hl.
-  eapply Forall_impl; [|exact Hl].
-  intros y Hy. eapply Nat.le_trans; [exact Hax| exact Hy].
-Qed.
+  Proof.
+    intros l a x Hax Hall.
+    induction Hall as [| y t Hyx Hall' IH].
+    - constructor.
+    - constructor.
+      + assert (a <= y) as Hay.
+        { apply (Nat.le_trans a x y).
+          * exact Hax.
+          * exact Hyx.
+        }
+        exact Hay.
+      + exact IH.
+  Qed.
 
 Lemma Forall_le_insert :
   forall x a l,
@@ -140,139 +148,78 @@ Lemma Forall_le_insert :
     x <= a ->
     Forall (fun z => x <= z) (insert a l).
 Proof.
-  intros x a l Hl Hxa; revert a Hxa.
-  induction Hl as [|y ys Hy Hys IH]; intros a Hxa; simpl.
-  - constructor; [assumption|constructor].
-  - destruct (a <=? y) eqn:Hay.
-    + constructor; [assumption|constructor; [exact Hy|exact Hys]].
-    + constructor; [exact Hy|apply IH; exact Hxa].
+  intros x a l Hl Hxa.
+  revert a Hxa.
+  induction Hl as [| y ys Hy Hys IH].
+  - intros a Hxa'. simpl.
+    constructor.
+    + exact Hxa'.
+    + constructor.
+  - intros a Hxa'. simpl.
+    destruct (a <=? y) eqn:Hay.
+    + constructor.
+      * exact Hxa'.
+      * constructor.
+        -- exact Hy.
+        -- exact Hys.
+    + constructor.
+      * exact Hy.
+      * assert (Forall (fun z => x <= z) (insert a ys)) as Htail.
+        { apply IH.
+          exact Hxa'.
+        }
+        exact Htail.
 Qed.
 
-Lemma insert_sorted :
-  forall (a : nat) (l : list nat),
-    Sorted l ->
-    Sorted (insert a l).
-Proof.
-  intros a l Hs; revert a.
-  induction l as [|x xs IH]; intros a; simpl.
-  - (* l = [] *)
-    apply (proj1 (Sorted_cons_iff a [])).
-    split; [exact Hs | constructor].
-  - (* l = x :: xs *)
-    destruct (a <=? x) eqn:Hab.
-    + (* case: a <= x *)
-      apply (proj1 (Sorted_cons_iff a (x :: xs))).
-      split.
-      -- exact Hs.
-      -- constructor.
-  ++ apply Nat.leb_le in Hab.  (* turns Hab into: Hab : a <= x *)
-exact Hab.
-  (* a <= x *)
-  ++ (* need Forall (le a) xs *)
-    destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs Hforx].
-    (* Hforx : Forall (le x) xs *)
-    eapply Forall_le_trans. apply Nat.leb_le in Hab. exact Hab. exact Hforx.
-
-    + (* a goes into the tail *)
-      apply Nat.leb_gt in Hab.  (* so x < a ⇒ x <= a *)
-      apply (proj1 (Sorted_cons_iff x (insert a xs))).
-      split.
-      * (* tail is sorted by IH *)
-        destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs _].
-        apply IH, Hxs.
-      * (* preserve head ≤ _ after insertion *)
-        destruct (proj2 (Sorted_cons_iff x xs) Hs) as [_ Hforx].
-        apply Forall_le_insert; [exact Hforx| lia ].
-Qed.
-
-
-
-
-  (*---------------------------- Exercice 4.1 - v2 -----------------------*)
-
-  Lemma Forall_le_lift :
-  forall a b l, a <= b -> Forall (le b) l -> Forall (le a) l.
-  Proof.
-    intros a b l Hab H.
-    induction H.
-    - constructor.
-    - constructor.
-      + eapply Nat.le_trans; [exact Hab|exact H].
-      + exact IHForall.
-  Qed.
-
-  Lemma Forall_le_preserved_by_insert :
-    forall h a t,
-      Forall (le h) t ->
-      h <= a ->
-      Forall (le h) (insert a t).
-  Proof.
-    intros h a t Hfor Hha.
-    induction Hfor as [|x xs Hhx Hfor' IH]; simpl.
-    - constructor; [assumption|constructor].
-    - destruct (Nat.leb a x) eqn:Habx.
-      + (* a <= x, list becomes a :: x :: xs *)
-        constructor; [assumption|].
-        constructor.
-        * eapply Nat.le_trans; [exact Hha|].
-          apply Nat.leb_le in Habx; exact Habx.
-        * exact Hfor'.
-      + (* a > x, list becomes x :: insert a xs *)
-        constructor; [assumption|].
-        apply IH; assumption.
-  Qed.
-
-  Lemma insert_sorted :
-    forall (a : nat) (l : list nat),
+  Lemma insert_sorted:
+    forall (a: nat) (l: list nat),
       Sorted l ->
-      Sorted (insert a l).
+        Sorted (insert a l).
   Proof.
-    intros a l Hs.
-    induction l as [|h t IH]; simpl.
-    - (* base: [a] *)
-      unfold Sorted. intros i j iv jv Hij Hi Hj.
-      destruct i as [|i']; simpl in Hi.
-      + inversion Hi; subst iv. destruct j as [|j']; [lia|].
-        simpl in Hj. destruct j'; inversion Hj.
-      + destruct j as [|j']; [lia|]. simpl in Hi. destruct i'; inversion Hi.
-    - destruct (Nat.leb a h) eqn:Ha_le_h.
-      + (* a <= h: a :: h :: t *)
-        pose proof (proj2 (Sorted_cons_iff h t) Hs) as [Ht Hfor_h].
-        pose proof (proj1 (Nat.leb_le a h) Ha_le_h) as Hah.  (* a <= h *)
-        assert (Forall (le a) (h :: t)) as Hforall_a.
-        { constructor.
-          - exact Hah.
-          - eapply Forall_le_lift; [exact Hah | exact Hfor_h]. }
-        (* Use proj1 : (Sorted (h::t) /\ Forall (le a) (h::t)) -> Sorted (a::h::t) *)
-        exact ((proj1 (Sorted_cons_iff a (h :: t))) (conj Hs Hforall_a)).
-      + (* a > h: h :: insert a t *)
-        pose proof (proj2 (Sorted_cons_iff h t) Hs) as [Ht Hfor_h].
-        specialize (IH Ht).
-        pose proof (proj1 (Nat.leb_gt a h) Ha_le_h) as Hagt.  (* h < a *)
-        assert (Forall (le h) (insert a t)) as Hforall_h.
-        { apply Forall_le_preserved_by_insert; [exact Hfor_h|].
-          apply Nat.lt_le_incl; exact Hagt. }
-        (* Again need pair -> Sorted (h :: insert a t) *)
-        exact ((proj1 (Sorted_cons_iff h (insert a t))) (conj IH Hforall_h)).
+    intros a l Hs; revert a.
+    induction l as [|x xs IH]; intros a; simpl.
+    - apply (proj1 (Sorted_cons_iff a [])).
+      split; [exact Hs | constructor].
+    - destruct (a <=? x) eqn:Hab.
+      + apply (proj1 (Sorted_cons_iff a (x :: xs))).
+        split.
+        -- exact Hs.
+        -- constructor.
+            ++ apply Nat.leb_le in Hab.
+               exact Hab.
+            ++ destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs Hforx].
+               eapply Forall_le_trans. 
+               apply Nat.leb_le in Hab. 
+               exact Hab.
+               exact Hforx.
+      + apply Nat.leb_gt in Hab.
+        apply (proj1 (Sorted_cons_iff x (insert a xs))).
+        split.
+         * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs _].
+           apply IH, Hxs.
+         * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [_ Hforx].
+           apply Forall_le_insert; [exact Hforx| lia ].
   Qed.
-
 
   (*---------------------------- Exercice 4.2 ----------------------------*)
 
-  Lemma insertion_sort_sorted :
-    forall (l : list nat),
+  Lemma insertion_sort_sorted:
+    forall (l: list nat),
       Sorted (insertion_sort l).
   Proof.
-    induction l as [| h t IH ]; simpl.
-    - (* Sorted [] *)
-      unfold Sorted. intros i j iv jv Hij Hi Hj.
-      destruct i as [|i']; simpl in Hi.
-      + (* i = 0 *) discriminate.
-      + (* i = S i' *)
-        destruct j as [|j']; [lia|].
-        simpl in Hi. discriminate.
-    - (* Sorted (insert h (insertion_sort t)) *)
-      apply insert_sorted. exact IH.
+    induction l as [| h t IH ].
+    - simpl.
+      unfold Sorted. 
+      intros i j iv jv Hij Hi Hj.
+      destruct i as [|i']. 
+      simpl in Hi.
+      + discriminate.
+      + destruct j as [|j']. 
+        * lia.
+        * discriminate.
+    - simpl. 
+      apply insert_sorted.
+      exact IH.
   Qed.
 
   End Exercice4.
@@ -290,7 +237,7 @@ Qed.
     forall (l: list nat),
       Permutation l (f l) /\ Sorted (f l).
 
-  Lemma insertion_sort_is_a_sorting_algorithm :
+  Lemma insertion_sort_is_a_sorting_algorithm:
     is_a_sorting_algorithm insertion_sort.
   Proof.
     unfold is_a_sorting_algorithm.
