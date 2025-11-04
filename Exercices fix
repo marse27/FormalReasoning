@@ -127,7 +127,7 @@
   (*---------------------------- Exercice 4.1 ----------------------------*)
 
 
-  Lemma Forall_le_trans :
+  Lemma Forall_insert_trans :
   forall (l : list nat) (a x : nat),
     a <= x ->
     Forall (fun y => x <= y) l ->
@@ -147,35 +147,35 @@
       + exact IH.
   Qed.
 
-Lemma Forall_le_insert :
-  forall x a l,
-    Forall (fun z => x <= z) l ->
-    x <= a ->
-    Forall (fun z => x <= z) (insert a l).
-Proof.
-  intros x a l Hl Hxa.
-  revert a Hxa.
-  induction Hl as [| y ys Hy Hys IH].
-  - intros a Hxa'. simpl.
-    constructor.
-    + exact Hxa'.
-    + constructor.
-  - intros a Hxa'. simpl.
-    destruct (a <=? y) eqn:Hay.
-    + constructor.
-      * exact Hxa'.
-      * constructor.
-        -- exact Hy.
-        -- exact Hys.
-    + constructor.
-      * exact Hy.
-      * assert (Forall (fun z => x <= z) (insert a ys)) as Htail.
-        { 
-          apply IH.
-          exact Hxa'.
-        }
-        exact Htail.
-Qed.
+  Lemma Forall_insert :
+    forall x a l,
+      Forall (fun z => x <= z) l ->
+      x <= a ->
+      Forall (fun z => x <= z) (insert a l).
+  Proof.
+    intros x a l Hl Hxa.
+    revert a Hxa.
+    induction Hl as [| y ys Hy Hys IH].
+    - intros a Hxa'. simpl.
+      constructor.
+      + exact Hxa'.
+      + constructor.
+    - intros a Hxa'. simpl.
+      destruct (a <=? y) eqn:Hay.
+      + constructor.
+        * exact Hxa'.
+        * constructor.
+          -- exact Hy.
+          -- exact Hys.
+      + constructor.
+        * exact Hy.
+        * assert (Forall (fun z => x <= z) (insert a ys)) as Htail.
+          { 
+            apply IH.
+            exact Hxa'.
+          }
+          exact Htail.
+  Qed.
 
   Lemma insert_sorted:
     forall (a: nat) (l: list nat),
@@ -196,7 +196,7 @@ Qed.
                 ++ apply Nat.leb_le in Hab.
                    exact Hab.
                 ++ destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs Hforx].
-                   eapply Forall_le_trans. 
+                   eapply Forall_insert_trans. 
                    apply Nat.leb_le in Hab. 
                    exact Hab.
                    exact Hforx.
@@ -207,7 +207,7 @@ Qed.
                apply IH.
                apply Hxs.
             * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [_ Hforx].
-               apply Forall_le_insert.
+               apply Forall_insert.
                  ++ exact Hforx. 
                  ++ lia.
   Qed.
@@ -466,7 +466,7 @@ Qed.
 
 
   (*---------------------------- Exercice 6.4 - Hard ----------------------------*)
-  Lemma bubble_pass_cons_max_le :
+  Lemma bubble_pass_snoc_cons_max :
     forall z tl, list_max (bubble_pass (z :: tl)) <= Nat.max z (list_max tl).
   Proof.
     intros z tl.
@@ -493,23 +493,23 @@ Qed.
             ++ lia.
   Qed.
 
-  Lemma bubble_pass_max_le :
+  Lemma bubble_pass_snoc_max :
     forall l, list_max (bubble_pass l) <= list_max l.
   Proof.
     destruct l as [|x tl]; simpl.
     - rewrite bubble_pass_equation. 
       simpl. 
       apply Nat.le_refl.
-    - apply bubble_pass_cons_max_le.
+    - apply bubble_pass_snoc_cons_max.
   Qed.
 
-  Lemma list_max_iter_bubble_pass_le :
+  Lemma list_max_bubble_pass_snoc :
     forall n l, list_max (Nat.iter n bubble_pass l) <= list_max l.
   Proof.
     induction n as [|n IH]; intros l; simpl.
     - apply Nat.le_refl.
     - eapply Nat.le_trans.
-      + apply bubble_pass_max_le.
+      + apply bubble_pass_snoc_max.
       + apply IH.
   Qed.
 
@@ -524,7 +524,7 @@ Qed.
     - rewrite IH.
       apply bubble_pass_snoc.
       eapply Nat.le_trans.
-        + apply list_max_iter_bubble_pass_le.
+        + apply list_max_bubble_pass_snoc.
         + exact Hle.
   Qed.
 
