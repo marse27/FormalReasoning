@@ -37,17 +37,20 @@
   Module Exercice2.
   Import Exercice1.
 
-   Lemma insert_perm:
+  Lemma insert_perm:
     forall (a: nat) (l: list nat),
       Permutation (a :: l) (insert a l).
   Proof.
     induction l as [| h t IH].
-    - simpl. apply Permutation_refl.
-    - simpl. destruct (Nat.leb a h) eqn:EH.
-      + apply Permutation_refl.
-      + eapply perm_trans.
-        * apply perm_swap.
-        * apply perm_skip. exact IH.
+    - simpl. 
+      apply Permutation_refl.
+    - simpl. 
+      destruct (Nat.leb a h) eqn:EH.
+        + apply Permutation_refl.
+        + eapply perm_trans.
+          * apply perm_swap.
+          * apply perm_skip. 
+            exact IH.
   Qed.
 
   Lemma insertion_sort_perm:
@@ -55,10 +58,13 @@
       Permutation l (insertion_sort l).
   Proof.
     induction l as [| h t IH].
-    - simpl. apply Permutation_refl.
-    - simpl. eapply perm_trans.
-      + apply perm_skip. exact IH.
-      + apply insert_perm.
+    - simpl. 
+      apply Permutation_refl.
+    - simpl. 
+      eapply perm_trans.
+        + apply perm_skip. 
+          exact IH.
+        + apply insert_perm.
   Qed.
 
   End Exercice2.
@@ -91,29 +97,40 @@
             eapply Forall_forall in Hl.
             apply Hl.
             now apply nth_error_In in Hj.
-          * assert (i' < j') by lia.
+          * assert (i' < j').
+            {
+              lia.
+            }
             eapply Hs; eauto.
-    - intros H. split.
-      + unfold Sorted in *.
-        intros i j iv jv Hij Hi Hj.
-        assert (S i < S j) by lia.
-        specialize (H (S i) (S j) iv jv H0).
-        simpl in H.
-        rewrite Hi in H. rewrite Hj in H.
-        apply H.
-          * reflexivity.
-          * reflexivity.
-      + apply Forall_forall. 
-        intros x HIn.
-        apply In_nth_error in HIn as [j' Hj'].
-        unfold Sorted in H.
-        assert (0 < S j') as Hlt by lia.
-        specialize (H 0 (S j') a x Hlt).
-        simpl in H.
-        rewrite Hj' in H.
-        apply H.
-          * reflexivity.
-          * reflexivity.
+    - intros H. 
+      split.
+        + unfold Sorted in *.
+          intros i j iv jv Hij Hi Hj.
+          assert (S i < S j).
+          {
+            lia.
+          }
+          specialize (H (S i) (S j) iv jv H0).
+          simpl in H.
+          rewrite Hi in H. 
+          rewrite Hj in H.
+          apply H.
+            * reflexivity.
+            * reflexivity.
+        + apply Forall_forall. 
+          intros x HIn.
+          apply In_nth_error in HIn as [j' Hj'].
+          unfold Sorted in H.
+          assert (0 < S j') as Hlt.
+          {
+            lia.
+          } 
+          specialize (H 0 (S j') a x Hlt).
+          simpl in H.
+          rewrite Hj' in H.
+          apply H.
+            * reflexivity.
+            * reflexivity.
   Qed.
 
   End Exercice3.
@@ -254,8 +271,8 @@
     unfold is_a_sorting_algorithm.
     intro l.
     split.
-    - apply insertion_sort_perm.
-    - apply insertion_sort_sorted.
+      - apply insertion_sort_perm.
+      - apply insertion_sort_sorted.
   Qed.
 
   End Exercice5.
@@ -331,33 +348,33 @@
       + destruct (a <? x) eqn:Hax; simpl.
         * pose proof (IH x) as [b [l1 [Hbub Hmax]]].
           rewrite Hbub.
-          exists b, (a :: l1). 
-          split. 
+          exists b, (a :: l1).
+          split.
               ++ simpl.
                  reflexivity.
               ++ replace (Nat.max x (Nat.max y (list_max tl')))
-                 with (list_max (x :: y :: tl')) by (simpl; reflexivity). 
+                 with (list_max (x :: y :: tl')) by (simpl; reflexivity).
                  rewrite Hmax. 
                  apply Nat.max_r.
                  assert (Hx_le_b : x <= b).
                  { rewrite <- Hmax. 
                    simpl. 
-                   apply Nat.le_max_l. 
+                   apply Nat.le_max_l.
                  } 
                  apply Nat.le_trans with (m := x).
                    -- apply Nat.lt_le_incl.
                       apply Nat.ltb_lt in Hax. 
                       exact Hax.
                    -- exact Hx_le_b.
-        * pose proof (IH a) as [b [l1 [Hbub Hmax]]]. 
+        * pose proof (IH a) as [b [l1 [Hbub Hmax]]].
           rewrite Hbub. 
           exists b, (x :: l1). 
           split.
-            ++ simpl. 
+            ++ simpl.
                reflexivity.
             ++ apply Nat.ltb_ge in Hax.
                rewrite Nat.max_assoc.
-               rewrite (Nat.max_l _ _ Hax). 
+               rewrite (Nat.max_l _ _ Hax).
                simpl in Hmax.
                exact Hmax.
   Qed.
@@ -375,9 +392,9 @@
     induction l as [| z tl' IH]; intros a Hle; simpl.
     - rewrite bubble_pass_equation.
       destruct (a <? b) eqn:Hab; simpl.
-      + rewrite bubble_pass_equation. 
-        rewrite bubble_pass_equation. 
-        simpl. 
+      + rewrite bubble_pass_equation.
+        rewrite bubble_pass_equation.
+        simpl.
         reflexivity.
       + apply Nat.ltb_ge in Hab as Hba.
         assert (Ha_le : a <= b).
