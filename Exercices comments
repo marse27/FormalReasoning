@@ -164,17 +164,19 @@
     Forall (fun y => x <= y) l ->
     Forall (fun y => a <= y) l.
   Proof.
-    intros l a x Hax Hall.
-    induction Hall as [| y t Hyx Hall' IH].
-    - constructor.
-    - constructor.
-      + assert (a <= y) as Hay.
+    intros.
+    induction H0 as [| y t H1 H0' IH].
+    - (* l = [] *)
+      constructor.
+    - (* l = y :: t *)
+      constructor.
+      + assert (a <= y).
         { 
           apply (Nat.le_trans a x y).
-            * exact Hax.
-            * exact Hyx.
+            * exact H.
+            * exact H1.
         }
-        exact Hay.
+        exact H0.
       + exact IH.
   Qed.
 
@@ -184,28 +186,34 @@
       x <= a ->
       Forall (fun z => x <= z) (insert a l).
   Proof.
-    intros x a l Hl Hxa.
-    revert a Hxa.
-    induction Hl as [| y ys Hy Hys IH].
-    - intros a Hxa'. simpl.
+    intros.
+    revert a H0.
+    induction H as [| y ys Hy Hys IH].
+    - (* l = [] *)
+      intros a H0'. 
+      simpl.
       constructor.
-      + exact Hxa'.
-      + constructor.
-    - intros a Hxa'. simpl.
+        + exact H0'.
+        + constructor.
+    - (* l = y :: ys *)
+      intros a H0'. 
+      simpl.
       destruct (a <=? y) eqn:Hay.
-      + constructor.
-        * exact Hxa'.
+      + (* a <= y *)
+        constructor.
+        * exact H0'.
         * constructor.
           -- exact Hy.
           -- exact Hys.
-      + constructor.
+      + (* a > y *)
+        constructor.
         * exact Hy.
-        * assert (Forall (fun z => x <= z) (insert a ys)) as Htail.
+        * assert (Forall (fun z => x <= z) (insert a ys)) as H1.
           { 
             apply IH.
-            exact Hxa'.
+            exact H0'.
           }
-          exact Htail.
+          exact H1.
   Qed.
 
   Lemma insert_sorted:
@@ -213,31 +221,36 @@
       Sorted l ->
         Sorted (insert a l).
   Proof.
-    intros a l Hs; revert a.
+    intros.
+    revert a.
     induction l as [|x xs IH]; intros a; simpl.
-    - apply (proj1 (Sorted_cons_iff a [])).
+    - (* l = [] *)
+      apply (proj1 (Sorted_cons_iff a [])).
       split. 
-        + exact Hs.
+        + exact H.
         + constructor.
-    - destruct (a <=? x) eqn:Hab.
-        + apply (proj1 (Sorted_cons_iff a (x :: xs))).
+    - (* l = x :: xs *)
+      destruct (a <=? x) eqn:Hax.
+        + (* a <= x *)
+          apply (proj1 (Sorted_cons_iff a (x :: xs))).
           split.
-            * exact Hs.
+            * exact H.
             * constructor.
-                ++ apply Nat.leb_le in Hab.
-                   exact Hab.
-                ++ destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs Hforx].
+                ++ apply Nat.leb_le in Hax.
+                   exact Hax.
+                ++ destruct (proj2 (Sorted_cons_iff x xs) H) as [Hxs Hforx].
                    eapply Forall_insert_trans. 
-                   apply Nat.leb_le in Hab. 
-                   exact Hab.
+                   apply Nat.leb_le in Hax. 
+                   exact Hax.
                    exact Hforx.
-        + apply Nat.leb_gt in Hab.
+        + (* a > x *)
+          apply Nat.leb_gt in Hax.
           apply (proj1 (Sorted_cons_iff x (insert a xs))).
           split.
-            * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [Hxs _].
+            * destruct (proj2 (Sorted_cons_iff x xs) H) as [Hxs _].
                apply IH.
                apply Hxs.
-            * destruct (proj2 (Sorted_cons_iff x xs) Hs) as [_ Hforx].
+            * destruct (proj2 (Sorted_cons_iff x xs) H) as [_ Hforx].
                apply Forall_insert.
                  ++ exact Hforx. 
                  ++ lia.
