@@ -42,15 +42,15 @@
       Permutation (a :: l) (insert a l).
   Proof.
     induction l as [| h t IH].
-    - (* Case l = [] *)
+    - (* l = [] *)
       simpl. 
       apply Permutation_refl.
-    - (* Case l = h :: t *)
+    - (* l = h :: t *)
       simpl. 
       destruct (Nat.leb a h) eqn:EH.
-        + (* Case a <= h*) 
+        + (* a <= h*) 
           apply Permutation_refl.
-        + (* Case a > h*) 
+        + (* a > h*) 
           eapply perm_trans.
             * apply perm_swap.
             * apply perm_skip. 
@@ -62,10 +62,10 @@
       Permutation l (insertion_sort l).
   Proof.
     induction l as [| h t IH].
-    - (* Case l = [] *)
+    - (* l = [] *)
       simpl. 
       apply Permutation_refl.
-    - (* Case l = h :: t *)
+    - (* l = h :: t *)
       simpl. 
       eapply perm_trans.
         + apply perm_skip. 
@@ -92,46 +92,54 @@
         Sorted l /\ Forall (le a) l <-> Sorted (a :: l).
   Proof.
     split.
-    - intros [Hs Hl]. unfold Sorted in *.
-      intros i j iv jv Hij Hi Hj.
-      simpl in Hi, Hj.
+    - (* -> direction *)
+      intros [Hs Hl]. 
+      unfold Sorted in *.
+      intros.
       destruct j as [| j'].
-        + inversion Hij.
-        + destruct i as [| i'].
-          * inversion Hi; subst iv.
-            simpl in Hj.
-            eapply Forall_forall in Hl.
-            apply Hl.
-            now apply nth_error_In in Hj.
-          * assert (i' < j').
-            {
-              lia.
-            }
-            eapply Hs; eauto.
-    - intros H. 
+        + (* Impossible: i < 0 *)
+          inversion H.
+        + (* j = S j' *)
+          destruct i as [| i'].
+            * (* a < = jv*)
+              inversion H0; subst iv.
+              simpl in H1.
+              eapply Forall_forall in Hl.
+              apply Hl.
+              now apply nth_error_In in H1.
+            * (*i' < j'*) 
+              assert (i' < j').
+              {
+                lia.
+              }
+              eapply Hs; eauto.
+    - (* <- direction *)
+      intros H. 
       split.
-        + unfold Sorted in *.
-          intros i j iv jv Hij Hi Hj.
+        + (* Sorted l *)
+          unfold Sorted in *.
+          intros.
           assert (S i < S j).
           {
             lia.
           }
-          specialize (H (S i) (S j) iv jv H0).
+          specialize (H (S i) (S j) iv jv H3).
           simpl in H.
-          rewrite Hi in H. 
-          rewrite Hj in H.
+          rewrite H1 in H. 
+          rewrite H2 in H.
           apply H.
             * reflexivity.
             * reflexivity.
-        + apply Forall_forall. 
-          intros x HIn.
-          apply In_nth_error in HIn as [j' Hj'].
+        + (* Forall (le a) l *)
+          apply Forall_forall. 
+          intros.
+          apply In_nth_error in H0 as [j' Hj'].
           unfold Sorted in H.
-          assert (0 < S j') as Hlt.
+          assert (0 < S j').
           {
             lia.
           } 
-          specialize (H 0 (S j') a x Hlt).
+          specialize (H 0 (S j') a x H0).
           simpl in H.
           rewrite Hj' in H.
           apply H.
