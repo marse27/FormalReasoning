@@ -532,27 +532,30 @@
       exact H.
   Qed.
 
-
-
   (*---------------------------- Exercice 6.4 - Difficult ----------------------------*)
+
   Lemma bubble_pass_snoc_cons_max :
     forall z tl, list_max (bubble_pass (z :: tl)) <= Nat.max z (list_max tl).
   Proof.
-    intros z tl.
+    intros.
     revert z.
     induction tl as [| y tl IH]; intro z; simpl.
-    - rewrite bubble_pass_equation.
+    - (* tl = [] *)
+      rewrite bubble_pass_equation.
       simpl. 
       lia.
-    - rewrite bubble_pass_equation. 
+    - (* tl = y :: tl *)
+      rewrite bubble_pass_equation. 
       destruct (z <? y) eqn:Hz; simpl.
-      + apply Nat.max_lub.
+      + (* z < y *)
+        apply Nat.max_lub.
         * apply Nat.le_max_l.
         * specialize (IH y).
           eapply Nat.le_trans.
             ++ exact IH.
             ++ apply Nat.le_max_r.
-      + apply Nat.max_lub.
+      + (* z > = y*)
+        apply Nat.max_lub.
         * eapply Nat.le_trans.
             ++ apply Nat.le_max_l. 
             ++ apply Nat.le_max_r.
@@ -566,18 +569,22 @@
     forall l, list_max (bubble_pass l) <= list_max l.
   Proof.
     destruct l as [|x tl]; simpl.
-    - rewrite bubble_pass_equation. 
+    - (* l = [] *)
+      rewrite bubble_pass_equation. 
       simpl. 
       apply Nat.le_refl.
-    - apply bubble_pass_snoc_cons_max.
+    - (* l = x :: tl *)
+      apply bubble_pass_snoc_cons_max.
   Qed.
 
   Lemma list_max_bubble_pass_snoc :
     forall n l, list_max (Nat.iter n bubble_pass l) <= list_max l.
   Proof.
     induction n as [|n IH]; intros l; simpl.
-    - apply Nat.le_refl.
-    - eapply Nat.le_trans.
+    - (* n = 0 *)
+      apply Nat.le_refl.
+    - (* n -> S n *)
+      eapply Nat.le_trans.
       + apply bubble_pass_snoc_max.
       + apply IH.
   Qed.
@@ -589,12 +596,14 @@
   Proof.
     intros a n l Hle.
     induction n as [|n IH]; simpl.
-    - reflexivity.
-    - rewrite IH.
+    - (* n = 0 *)
+      reflexivity.
+    - (* n -> S n *)
+      rewrite IH.
       apply bubble_pass_snoc.
       eapply Nat.le_trans.
-        + apply list_max_bubble_pass_snoc.
-        + exact Hle.
+      + apply list_max_bubble_pass_snoc.
+      + exact Hle.
   Qed.
 
 
