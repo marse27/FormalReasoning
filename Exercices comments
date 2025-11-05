@@ -97,7 +97,7 @@
       unfold Sorted in *.
       intros.
       destruct j as [| j'].
-        + (* Impossible: i < 0 *)
+        + (* i < 0 *)
           inversion H.
         + (* j = S j' *)
           destruct i as [| i'].
@@ -263,16 +263,22 @@
       Sorted (insertion_sort l).
   Proof.
     induction l as [| h t IH ].
-    - simpl.
+    - (* l = [] *)
+      simpl.
       unfold Sorted. 
-      intros i j iv jv Hij Hi Hj.
+      intros.
       destruct i as [|i']. 
-      simpl in Hi.
-      + discriminate.
-      + destruct j as [|j']. 
-        * lia.
-        * discriminate.
-    - simpl. 
+      simpl in H0.
+      + (* i = 0 *)
+        discriminate.
+      + (* i = S i' *)
+        destruct j as [|j']. 
+        * (* j = 0 *)
+          lia.
+        * (* j = S j' *)
+          discriminate.
+    - (* l = h :: t *)
+      simpl. 
       apply insert_sorted.
       exact IH.
   Qed.
