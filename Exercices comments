@@ -304,8 +304,10 @@
     unfold is_a_sorting_algorithm.
     intro l.
     split.
-      - apply insertion_sort_perm.
-      - apply insertion_sort_sorted.
+      - (* permutation property *)
+        apply insertion_sort_perm.
+      - (* sorted property *)
+        apply insertion_sort_sorted.
   Qed.
 
   End Exercice5.
