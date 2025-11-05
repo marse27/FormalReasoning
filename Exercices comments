@@ -48,13 +48,13 @@
     - (* l = h :: t *)
       simpl. 
       destruct (Nat.leb a h) eqn:EH.
-        + (* a <= h*) 
-          apply Permutation_refl.
-        + (* a > h*) 
-          eapply perm_trans.
-            * apply perm_swap.
-            * apply perm_skip. 
-              exact IH.
+      + (* a <= h*) 
+        apply Permutation_refl.
+      + (* a > h*) 
+        eapply perm_trans.
+        * apply perm_swap.
+        * apply perm_skip. 
+          exact IH.
   Qed.
 
   Lemma insertion_sort_perm:
@@ -68,9 +68,9 @@
     - (* l = h :: t *)
       simpl. 
       eapply perm_trans.
-        + apply perm_skip. 
-          exact IH.
-        + apply insert_perm.
+      + apply perm_skip. 
+        exact IH.
+      + apply insert_perm.
   Qed.
 
   End Exercice2.
@@ -97,54 +97,54 @@
       unfold Sorted in *.
       intros.
       destruct j as [| j'].
-        + (* i < 0 *)
-          inversion H.
-        + (* j = S j' *)
-          destruct i as [| i'].
-            * (* a < = jv*)
-              inversion H0; subst iv.
-              simpl in H1.
-              eapply Forall_forall in Hl.
-              apply Hl.
-              now apply nth_error_In in H1.
-            * (*i' < j'*) 
-              assert (i' < j').
-              {
-                lia.
-              }
-              eapply Hs; eauto.
-    - (* <- direction *)
-      intros H. 
-      split.
-        + (* Sorted l *)
-          unfold Sorted in *.
-          intros.
-          assert (S i < S j).
+      + (* i < 0 *)
+        inversion H.
+      + (* j = S j' *)
+        destruct i as [| i'].
+        * (* a < = jv*)
+          inversion H0; subst iv.
+          simpl in H1.
+          eapply Forall_forall in Hl.
+          apply Hl.
+          now apply nth_error_In in H1.
+        * (*i' < j'*) 
+          assert (i' < j').
           {
             lia.
           }
-          specialize (H (S i) (S j) iv jv H3).
-          simpl in H.
-          rewrite H1 in H. 
-          rewrite H2 in H.
-          apply H.
-            * reflexivity.
-            * reflexivity.
-        + (* Forall (le a) l *)
-          apply Forall_forall. 
-          intros.
-          apply In_nth_error in H0 as [j' Hj'].
-          unfold Sorted in H.
-          assert (0 < S j').
-          {
-            lia.
-          } 
-          specialize (H 0 (S j') a x H0).
-          simpl in H.
-          rewrite Hj' in H.
-          apply H.
-            * reflexivity.
-            * reflexivity.
+          eapply Hs; eauto.
+    - (* <- direction *)
+      intros H. 
+      split.
+      + (* Sorted l *)
+        unfold Sorted in *.
+        intros.
+        assert (S i < S j).
+        {
+          lia.
+        }
+        specialize (H (S i) (S j) iv jv H3).
+        simpl in H.
+        rewrite H1 in H. 
+        rewrite H2 in H.
+        apply H.
+        * reflexivity.
+        * reflexivity.
+      + (* Forall (le a) l *)
+        apply Forall_forall. 
+        intros.
+        apply In_nth_error in H0 as [j' Hj'].
+        unfold Sorted in H.
+        assert (0 < S j').
+        {
+          lia.
+        } 
+        specialize (H 0 (S j') a x H0).
+        simpl in H.
+        rewrite Hj' in H.
+        apply H.
+        * reflexivity.
+        * reflexivity.
   Qed.
 
   End Exercice3.
@@ -173,8 +173,8 @@
       + assert (a <= y).
         { 
           apply (Nat.le_trans a x y).
-            * exact H.
-            * exact H1.
+          * exact H.
+          * exact H1.
         }
         exact H0.
       + exact IH.
@@ -193,8 +193,8 @@
       intros a H0'. 
       simpl.
       constructor.
-        + exact H0'.
-        + constructor.
+      + exact H0'.
+      + constructor.
     - (* l = y :: ys *)
       intros a H0'. 
       simpl.
@@ -227,33 +227,33 @@
     - (* l = [] *)
       apply (proj1 (Sorted_cons_iff a [])).
       split. 
-        + exact H.
-        + constructor.
+      + exact H.
+      + constructor.
     - (* l = x :: xs *)
       destruct (a <=? x) eqn:Hax.
-        + (* a <= x *)
-          apply (proj1 (Sorted_cons_iff a (x :: xs))).
-          split.
-            * exact H.
-            * constructor.
-                ++ apply Nat.leb_le in Hax.
-                   exact Hax.
-                ++ destruct (proj2 (Sorted_cons_iff x xs) H) as [Hxs H1].
-                   eapply Forall_insert_trans. 
-                   apply Nat.leb_le in Hax. 
-                   exact Hax.
-                   exact H1.
-        + (* a > x *)
-          apply Nat.leb_gt in Hax.
-          apply (proj1 (Sorted_cons_iff x (insert a xs))).
-          split.
-            * destruct (proj2 (Sorted_cons_iff x xs) H) as [Hxs _].
-               apply IH.
-               apply Hxs.
-            * destruct (proj2 (Sorted_cons_iff x xs) H) as [_ H1].
-               apply Forall_insert.
-                 ++ exact H1. 
-                 ++ lia.
+      + (* a <= x *)
+        apply (proj1 (Sorted_cons_iff a (x :: xs))).
+        split.
+        * exact H.
+        * constructor.
+          ++ apply Nat.leb_le in Hax.
+             exact Hax.
+          ++ destruct (proj2 (Sorted_cons_iff x xs) H) as [Hxs H1].
+             eapply Forall_insert_trans. 
+             apply Nat.leb_le in Hax. 
+             exact Hax.
+             exact H1.
+      + (* a > x *)
+        apply Nat.leb_gt in Hax.
+        apply (proj1 (Sorted_cons_iff x (insert a xs))).
+        split.
+        * destruct (proj2 (Sorted_cons_iff x xs) H) as [Hxs _].
+          apply IH.
+          apply Hxs.
+        * destruct (proj2 (Sorted_cons_iff x xs) H) as [_ H1].
+          apply Forall_insert.
+          ++ exact H1. 
+          ++ lia.
   Qed.
 
   (*---------------------------- Exercice 4.2 ----------------------------*)
@@ -304,10 +304,10 @@
     unfold is_a_sorting_algorithm.
     intro l.
     split.
-      - (* permutation property *)
-        apply insertion_sort_perm.
-      - (* sorted property *)
-        apply insertion_sort_sorted.
+    - (* permutation property *)
+      apply insertion_sort_perm.
+    - (* sorted property *)
+      apply insertion_sort_sorted.
   Qed.
 
   End Exercice5.
@@ -355,72 +355,72 @@
     - (* l = [] *)
       exists a, [].
       split.
-        + rewrite bubble_pass_equation. 
-          simpl.
-          reflexivity.
-        + rewrite Nat.max_0_r. 
-          reflexivity.
+      + rewrite bubble_pass_equation. 
+        simpl.
+        reflexivity.
+      + rewrite Nat.max_0_r. 
+        reflexivity.
     - (* l = x :: tl *)
       rewrite bubble_pass_equation.
       destruct tl as [| y tl'].
-        + (* tl = []*)
-          destruct (a <? x) eqn:Hax; simpl.
-            * (* a < x *)
-              exists x, [a].
-              split. 
-                ++ rewrite bubble_pass_equation. 
-                   simpl.
-                   reflexivity.
-                ++ rewrite Nat.max_0_r. 
-                   apply Nat.max_r. 
-                   apply Nat.ltb_lt in Hax.
-                   lia.
-            * (* a >= x *)
-              exists a, [x]. 
-              split. 
-                ++ rewrite bubble_pass_equation.
-                   simpl.
-                   reflexivity.
-                ++ rewrite Nat.max_0_r. 
-                   apply Nat.max_l. 
-                   apply Nat.ltb_ge in Hax.
-                   exact Hax.
+      + (* tl = []*)
+        destruct (a <? x) eqn:Hax; simpl.
+        * (* a < x *)
+          exists x, [a].
+          split. 
+          ++ rewrite bubble_pass_equation. 
+             simpl.
+             reflexivity.
+          ++ rewrite Nat.max_0_r. 
+             apply Nat.max_r. 
+             apply Nat.ltb_lt in Hax.
+             lia.
+        * (* a >= x *)
+          exists a, [x]. 
+          split. 
+          ++ rewrite bubble_pass_equation.
+             simpl.
+             reflexivity.
+          ++ rewrite Nat.max_0_r. 
+             apply Nat.max_l. 
+             apply Nat.ltb_ge in Hax.
+             exact Hax.
       + (* tl = y :: tl' *)
         destruct (a <? x) eqn:Hax; simpl.
-          * (* a < x *)
-            pose proof (IH x) as [b [l1 [Hb Hmax]]].
-            rewrite Hb.
-            exists b, (a :: l1).
-            split.
-              ++ simpl.
-                 reflexivity.
-              ++ replace (Nat.max x (Nat.max y (list_max tl')))
-                 with (list_max (x :: y :: tl')) by (simpl; reflexivity).
-                 rewrite Hmax. 
-                 apply Nat.max_r.
-                 assert (Hxb : x <= b).
-                 { 
-                   rewrite <- Hmax. 
-                   simpl. 
-                   apply Nat.le_max_l.
-                 } 
-                 apply Nat.le_trans with (m := x).
-                   -- apply Nat.lt_le_incl.
-                      apply Nat.ltb_lt in Hax. 
-                      exact Hax.
-                   -- exact Hxb.
+        * (* a < x *)
+          pose proof (IH x) as [b [l1 [Hb Hmax]]].
+          rewrite Hb.
+          exists b, (a :: l1).
+          split.
+          ++ simpl.
+             reflexivity.
+          ++ replace (Nat.max x (Nat.max y (list_max tl')))
+             with (list_max (x :: y :: tl')) by (simpl; reflexivity).
+             rewrite Hmax. 
+             apply Nat.max_r.
+             assert (Hxb : x <= b).
+             { 
+               rewrite <- Hmax. 
+               simpl. 
+               apply Nat.le_max_l.
+             } 
+             apply Nat.le_trans with (m := x).
+             -- apply Nat.lt_le_incl.
+                apply Nat.ltb_lt in Hax. 
+                exact Hax.
+             -- exact Hxb.
         * (* a >= x *)
           pose proof (IH a) as [b [l1 [Hb Hmax]]].
           rewrite Hb. 
           exists b, (x :: l1). 
           split.
-            ++ simpl.
-               reflexivity.
-            ++ apply Nat.ltb_ge in Hax.
-               rewrite Nat.max_assoc.
-               rewrite (Nat.max_l _ _ Hax).
-               simpl in Hmax.
-               exact Hmax.
+          ++ simpl.
+             reflexivity.
+          ++ apply Nat.ltb_ge in Hax.
+             rewrite Nat.max_assoc.
+             rewrite (Nat.max_l _ _ Hax).
+             simpl in Hmax.
+             exact Hmax.
   Qed.
 
 
@@ -462,54 +462,54 @@
       assert (Hztl : list_max (z :: tl') <= b).
       {
         eapply Nat.le_trans.
-          - apply Nat.le_max_r.
-          - exact Hle.
+        - apply Nat.le_max_r.
+        - exact Hle.
       }
       assert (Hab' : a <= b).
       {
         eapply Nat.le_trans.
-          - apply Nat.le_max_l.
-          - exact Hle.
+        - apply Nat.le_max_l.
+        - exact Hle.
       }
       assert (Htlb : list_max tl' <= b).
       {
         eapply Nat.le_trans.
-          - apply Nat.le_max_r.
-          - exact Hztl.
+        - apply Nat.le_max_r.
+        - exact Hztl.
       }
       assert (Hatlb : list_max (a :: tl') <= b).
       { 
         simpl. 
         apply Nat.max_lub.
-          - exact Hab'.
-          - exact Htlb.
+        - exact Hab'.
+        - exact Htlb.
       }
       rewrite bubble_pass_equation.
       destruct (a <? z) eqn:Haz; simpl.
-        + (* a < z *)
-          specialize (IH z Hztl).
-          rewrite IH.
-          assert (H1 : bubble_pass (a :: z :: tl') = a :: bubble_pass (z :: tl')).
-          { 
-            rewrite bubble_pass_equation. 
-            rewrite Haz. 
-            reflexivity. 
-          }
-          rewrite H1.
-          simpl.
-          reflexivity.
-        + (* a >= z *)
-          specialize (IH a Hatlb).
-          rewrite IH.
-          assert (H1 : bubble_pass (a :: z :: tl') = z :: bubble_pass (a :: tl')).
-          { 
-            rewrite bubble_pass_equation. 
-            rewrite Haz. 
-            reflexivity. 
-          }
-          rewrite H1.
-          simpl.
-          reflexivity.
+      + (* a < z *)
+        specialize (IH z Hztl).
+        rewrite IH.
+        assert (H1 : bubble_pass (a :: z :: tl') = a :: bubble_pass (z :: tl')).
+        { 
+          rewrite bubble_pass_equation. 
+          rewrite Haz. 
+          reflexivity. 
+        }
+        rewrite H1.
+        simpl.
+        reflexivity.
+      + (* a >= z *)
+        specialize (IH a Hatlb).
+        rewrite IH.
+        assert (H1 : bubble_pass (a :: z :: tl') = z :: bubble_pass (a :: tl')).
+        { 
+          rewrite bubble_pass_equation. 
+          rewrite Haz. 
+          reflexivity. 
+        }
+        rewrite H1.
+        simpl.
+        reflexivity.
   Qed.
 
   (*---------------------------- Exercice 6.3 - Difficult ----------------------------*)
@@ -552,17 +552,17 @@
         * apply Nat.le_max_l.
         * specialize (IH y).
           eapply Nat.le_trans.
-            ++ exact IH.
-            ++ apply Nat.le_max_r.
+          ++ exact IH.
+          ++ apply Nat.le_max_r.
       + (* z > = y*)
         apply Nat.max_lub.
         * eapply Nat.le_trans.
-            ++ apply Nat.le_max_l. 
-            ++ apply Nat.le_max_r.
+          ++ apply Nat.le_max_l. 
+          ++ apply Nat.le_max_r.
         * specialize (IH z).
           eapply Nat.le_trans.
-            ++ exact IH.
-            ++ lia.
+          ++ exact IH.
+          ++ lia.
   Qed.
 
   Lemma bubble_pass_snoc_max :
