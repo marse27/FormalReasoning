@@ -157,7 +157,6 @@
 
   (*---------------------------- Exercice 4.1 ----------------------------*)
 
-
   Lemma Forall_insert_trans :
   forall (l : list nat) (a x : nat),
     a <= x ->
@@ -284,7 +283,6 @@
   Qed.
 
   End Exercice4.
-
 
   (*---------------------------- Exercice 5 ----------------------------*)
 
@@ -422,7 +420,6 @@
              simpl in Hmax.
              exact Hmax.
   Qed.
-
 
   (*---------------------------- Exercice 6.2 - Difficult ----------------------------*)
 
@@ -605,7 +602,6 @@
       + apply list_max_bubble_pass_snoc.
       + exact Hle.
   Qed.
-
 
   End Exercice6Difficult.
 
